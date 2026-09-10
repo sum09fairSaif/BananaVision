@@ -1,0 +1,18 @@
+{
+  "canon_by_index": [
+    "overripe",
+    "ripe",
+    "rotten",
+    "unripe"
+  ],
+  "days_by_stage": {
+    "unripe": 7.0,
+    "ripe": 3.0,
+    "overripe": 1.0,
+    "rotten": 0.0
+  },
+  "img_size": [
+    224,
+    224
+  ]
+}

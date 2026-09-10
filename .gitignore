@@ -1,0 +1,21 @@
+@'
+# Python virtualenv
+tfdml_env/
+__pycache__/
+*.pyc
+
+# Dataset (re-download from Kaggle)
+data/
+
+# Node
+app/node_modules/
+app/.expo/
+
+# Large model checkpoints
+train/*.keras
+*.h5
+
+# OS
+Thumbs.db
+.DS_Store
+'@ | Out-File -Encoding utf8 .gitignore
