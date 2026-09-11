@@ -627,12 +627,53 @@ Export two things: the **model** in the small `.tflite` format, and a **small nu
 ### Step A — Convert the model to TFLite
 
 **Do the following:**
-1. Create a `TFLiteConverter` from your trained Keras model, set `optimizations = [tf.lite.Optimize.DEFAULT]`, convert, and write `banana_model.tflite`.
+1. Rebuild an **inference-only** copy of your model that excludes the `data_augmentation` block from Part 2.
+2. Create a `TFLiteConverter` from *that* model, set `optimizations = [tf.lite.Optimize.DEFAULT]`, convert, and write `banana_model.tflite`.
+3. Score the exported `.tflite` against the Keras model on real test images before you ship it.
 
-**Why convert and why "optimize":** the `.tflite` is a slimmed-down model built for fast, low-memory inference. `Optimize.DEFAULT` applies **dynamic-range quantization** (storing weights in 8-bit instead of 32-bit), which shrinks the file ~4× and speeds it up for a tiny accuracy dip — and, importantly, it keeps the model's **inputs and outputs as float32**, so your server code feeds it a normal float image and reads normal float probabilities (no integer-scaling gymnastics). Re-check accuracy after quantizing.
+> ### ⚠️ Do not convert the training model directly
+>
+> In Part 3 you put `data_augmentation` **inside** the model graph, so the random flips, rotations and contrast shifts travel with the saved model. Keras knows to skip them at inference time because it has a `training` flag. **`TFLiteConverter` has no such flag** — it converts the ops it sees, so the random transforms get baked into the exported file and mangle every image before it reaches MobileNetV2.
+>
+> This fails *silently*. You get a valid `.tflite` of the expected size that loads and returns plausible-looking probabilities. Measured on a 40-image test set, the difference was stark:
+>
+> | Model | Accuracy | Mean confidence |
+> |---|---|---|
+> | Keras `.keras` checkpoint | **100%** | — |
+> | `.tflite` converted directly | **30%** | 0.44 |
+> | `.tflite` with augmentation removed | **100%** | 0.996 |
+>
+> 30% on four classes is barely above the 25% you'd get by guessing. Note the confidence column: the broken model returned **0.41–0.63 on everything**. That flat, indecisive spread is the fingerprint of this bug — a healthy quantized MobileNetV2 is confident, usually 0.95+.
+>
+> The converter warns you, but the warnings look like ordinary noise and scroll past in seconds:
+>
+> ```
+> WARNING: Using a while_loop for converting StatelessRandomUniformV2 ...
+> WARNING: Using a while_loop for converting ImageProjectiveTransformV3 ...
+> WARNING: Using a while_loop for converting AdjustContrastv2 ...
+> ```
+>
+> **If you see `Random`, `ImageProjectiveTransform` or `AdjustContrast` in the conversion output, augmentation is leaking into your export.** After the fix, those lines disappear — that absence is your confirmation.
+>
+> The same trap applies to any Keras preprocessing layer with randomness, and to ONNX and TF.js exports too. Augmentation belongs in the *training pipeline*, never in the shipped graph.
+
+**Why convert and why "optimize":** the `.tflite` is a slimmed-down model built for fast, low-memory inference. `Optimize.DEFAULT` applies **dynamic-range quantization** (storing weights in 8-bit instead of 32-bit), which shrinks the file ~4× and speeds it up for a tiny accuracy dip — and, importantly, it keeps the model's **inputs and outputs as float32**, so your server code feeds it a normal float image and reads normal float probabilities (no integer-scaling gymnastics).
+
+**Why rebuilding is safe:** you are not retraining anything. You pass the *same layer objects* — the same learned weights — into a new graph that starts at `preprocess_input` instead of at augmentation. `Dropout` is dropped for the same reason: it is a training-only layer and a no-op at inference. The exported file comes out the same size as before.
 
 ```python
-converter = tf.lite.TFLiteConverter.from_keras_model(model)
+from tensorflow.keras import layers, models
+from tensorflow.keras.applications.mobilenet_v2 import preprocess_input
+
+# Rebuild WITHOUT data_augmentation. Same trained layers, inference-only graph.
+inputs = layers.Input(shape=IMG_SIZE + (3,))
+x = preprocess_input(inputs)                                   # scale to [-1, 1]
+x = model.get_layer("mobilenetv2_1.00_224")(x, training=False)
+x = model.get_layer("global_average_pooling2d")(x)
+outputs = model.get_layer("dense")(x)
+infer_model = models.Model(inputs, outputs)
+
+converter = tf.lite.TFLiteConverter.from_keras_model(infer_model)
 converter.optimizations = [tf.lite.Optimize.DEFAULT]
 tflite_model = converter.convert()
 
@@ -640,6 +681,33 @@ with open("banana_model.tflite", "wb") as f:
     f.write(tflite_model)
 print("Wrote banana_model.tflite:", len(tflite_model) // 1024, "KB")
 ```
+
+> Layer names are auto-assigned by Keras, so `"dense"` and `"global_average_pooling2d"` may come out as `"dense_1"` etc. if you re-ran cells in a live kernel. Run `model.summary()` to read the real names.
+
+**Now verify the export — do not skip this.** A silent 70% accuracy loss is exactly what this step exists to catch:
+
+```python
+import numpy as np
+from ai_edge_litert.interpreter import Interpreter
+
+interpreter = Interpreter(model_path="banana_model.tflite")
+interpreter.allocate_tensors()
+inp = interpreter.get_input_details()[0]
+out = interpreter.get_output_details()[0]
+
+agree = total = 0
+for images, labels in test_ds:
+    keras_pred = infer_model.predict(images, verbose=0).argmax(axis=1)
+    for img, kp in zip(images.numpy(), keras_pred):
+        interpreter.set_tensor(inp["index"], img[None].astype(np.float32))
+        interpreter.invoke()
+        agree += int(interpreter.get_tensor(out["index"])[0].argmax() == kp)
+        total += 1
+
+print(f"TFLite agrees with Keras on {agree}/{total} = {agree/total:.1%}")
+```
+
+**Pass:** agreement **above 95%**. Dynamic-range quantization should cost you a percent or two at most. Anything near 30% means augmentation is still in the graph.
 
 ### Step B — Save the slim config (numbers only)
 
@@ -686,7 +754,7 @@ This is the spine of the MVP. The model lives on a small web server on the inter
 """BananaVision online backend — serves the quantized .tflite with LiteRT,
 and the per-stage content parsed from banana_stages.md.
 Local run:  uvicorn app:app --host 0.0.0.0 --port 8000 --reload
-On Hugging Face Spaces the Dockerfile runs it on port 7860.
+In production the Dockerfile binds $PORT (Render) or falls back to 7860.
 """
 import io
 import json
@@ -784,7 +852,11 @@ ai-edge-litert
 numpy<2
 ```
 
-**Why the Dockerfile looks like this:** it starts from a slim Python image (small, fast to build), installs your requirements, copies your files in, and launches `uvicorn` on **port 7860** — the port Hugging Face Spaces expects a Docker app to listen on. `--host 0.0.0.0` makes it listen on the container's real network interface (not just `localhost`), which is what lets outside traffic reach it.
+**Why the Dockerfile looks like this:** it starts from a slim Python image (small, fast to build), installs your requirements, copies your files in, and launches `uvicorn`. `--host 0.0.0.0` makes it listen on the container's real network interface (not just `localhost`), which is what lets outside traffic reach it.
+
+**Why the port is a variable:** hosts disagree about ports. Render (and Cloud Run, and Railway) assign one at runtime and pass it in as a `$PORT` environment variable; Hugging Face Spaces expects a fixed 7860. `${PORT:-7860}` satisfies both — use `$PORT` when the host sets one, otherwise fall back to 7860. Hardcoding a port means the host's health check waits for a service that never appears on the port it is watching, and the deploy hangs and then times out.
+
+**Why `sh -c`:** in the bracket (exec) form, Docker passes `${PORT}` through as a **literal string** — no shell is involved, so nothing expands. Wrapping the command in `sh -c` gives you a shell to do the substitution. This is a common and genuinely invisible failure.
 
 **Create `Dockerfile`:**
 
@@ -795,28 +867,73 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 EXPOSE 7860
-CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "7860"]
+CMD ["sh", "-c", "uvicorn app:app --host 0.0.0.0 --port ${PORT:-7860}"]
 ```
 
 ### Step C — Test locally, then deploy online
 
-**First, prove it works on your own machine (in a terminal, not your interactive session):**
-1. `pip install -r requirements.txt`
+**First, prove it works on your own machine.** Run these from **inside the `api/` folder** — `app:app` means "module `app` in the current directory", and `app.py` opens `banana_model.tflite`, `banana_config.json` and `banana_stages.md` by *relative* path, so the wrong working directory gives you a `Could not open` error.
+
+1. Activate your virtual environment, then `pip install -r requirements.txt`
 2. `uvicorn app:app --host 0.0.0.0 --port 8000 --reload`
-3. `curl -F "file=@test_banana.jpg" http://localhost:8000/analyze` — you should get the JSON back.
+3. Wait for `Application startup complete.` before testing.
+4. In a **second** terminal: `curl -F "file=@../app/assets/test_image.jpeg" http://localhost:8000/analyze`
 
-**Then put it online. Recommended host: Hugging Face Spaces (Docker) — free CPU tier, generous RAM, always-on, no credit card.** It's built for exactly this.
+> ### Three things that trip people up on Windows
+>
+> **`curl` is not curl in PowerShell.** It is an alias for `Invoke-WebRequest`, which has no `-F` flag. Write **`curl.exe`** explicitly, or use `Invoke-RestMethod -Form @{ file = Get-Item ... }` (PowerShell 7+ only).
+>
+> **`0.0.0.0` is not a browsable address.** It is a *bind* address meaning "listen on every interface". Browsing to `http://0.0.0.0:8000` returns `ERR_ADDRESS_INVALID`. Use **`http://localhost:8000`** in the browser and keep `--host 0.0.0.0` in the command — that flag is what lets your phone reach the API over Wi-Fi in Part 9.
+>
+> **There is no route at `/`.** `http://localhost:8000/` correctly returns `{"detail":"Not Found"}`. Open **`/docs`** instead — FastAPI generates a full interactive UI there where you can upload an image with a file picker and read the JSON, no curl needed.
 
-1. Create an account at `huggingface.co`, then **New Space** → **SDK: Docker** → **Hardware: CPU basic (free)** → Public.
-2. Into that Space's repo, add these seven files: `app.py`, `requirements.txt`, `Dockerfile`, `banana_model.tflite`, `banana_config.json`, `banana_stages.md`, and `banana_content.py`. (Drag-and-drop in the web UI, or `git push`.)
-3. The Space builds automatically. When its status shows **Running**, your public API is at:
-   `https://<your-username>-<space-name>.hf.space`
-4. Confirm it's alive: open `https://<...>.hf.space/health` (should say `{"status":"ok"}`), then
-   `curl -F "file=@test_banana.jpg" https://<...>.hf.space/analyze`.
+**Check the numbers, not just the status code.** A 200 response only proves the plumbing works. Confirm a rotten banana comes back as `"stage":"rotten"` with `"edible":false`, and that confidence is **0.95 or higher**. Predictions clustered in the 0.4–0.6 range mean you are serving the broken export from Part 7.
 
-**Why this host and one caveat:** a full-TensorFlow server would strain a free tier, but our LiteRT server is tiny, so it fits with room to spare — and it stays awake, so there's no cold-start delay for your users. The caveat: a **public** Space means your code and endpoint are public. That's fine for an MVP; when you want to lock it down, add a simple API-key check in `app.py` (read a key from an environment variable, compare it to a header) and store the key as a Space **secret**.
+---
 
-> **Free alternative:** Render's free tier also works *because* we went lightweight (a full-TF server won't fit its 512 MB, but the LiteRT one does). The trade-off is that Render's free service sleeps after ~15 minutes idle, so the first request after a nap is slow. Hugging Face Spaces avoids that.
+**Then put it online. Recommended host: Render (free tier) — Docker support, no credit card, permanent free plan.**
+
+> **Note on Hugging Face Spaces:** earlier versions of this guide recommended HF Spaces, and much of the internet still does. **Hugging Face now restricts Docker and Gradio Spaces to paid plans** — Static is the only free SDK for new accounts. Static Spaces serve HTML/CSS/JS only, with no Python process, so they cannot host a FastAPI backend at all. If you already pay for HF PRO ($9/month), the Docker route still works and gives you an always-awake service; otherwise use Render.
+
+1. Push your project to GitHub. Add a `.gitignore` **first** — see the warning below.
+2. At `render.com`, sign up (no card needed) and choose **New → Web Service**.
+3. Connect your GitHub account and pick the repo. Connecting the account rather than pasting a public URL is what enables auto-deploy on every push.
+4. Set these fields:
+   - **Language:** Docker
+   - **Branch:** `main`
+   - **Root Directory:** `api` ← *essential.* Without it Render looks for a `Dockerfile` at the repo root, finds none, and the build fails immediately.
+   - **Instance Type:** Free (0.1 CPU, 512 MB RAM)
+   - **Region:** whichever is nearest you — this cannot be changed later without recreating the service.
+5. Leave **Environment Variables** empty. `app.py` reads none. In particular **do not add `PORT`** — Render injects it, and overriding it breaks the health check.
+6. Optionally, under **Advanced**, set **Health Check Path** to `/health` so a failed deploy fails fast and legibly.
+7. Build takes 3–5 minutes. Watch for `Application startup complete.` in the log, then confirm:
+   `curl.exe -s https://<your-service>.onrender.com/health`
+
+> ### ⚠️ Never `git add .` without a `.gitignore`
+>
+> Your project folder contains a virtual environment, a dataset and `node_modules`. On a real run these measured **1.7 GB / 38,132 files**, **257 MB**, and **317 MB / 22,359 files** respectively — about **2.3 GB across 74,000 files**. GitHub would reject the push. The give-away is a wall of `LF will be replaced by CRLF` warnings naming paths inside `site-packages/`.
+>
+> Commit a `.gitignore` at the repo root **before** your first `git add`:
+>
+> ```text
+> tfdml_env/          # or venv/, .venv/ — whatever you named it
+> __pycache__/
+> *.pyc
+> data/               # re-downloadable from Kaggle
+> app/node_modules/
+> app/.expo/
+> train/*.keras       # 21 MB checkpoint; keep if you want reproducibility
+> ```
+>
+> Keep `api/banana_model.tflite` **tracked** — at 2.4 MB it is small, and the Dockerfile needs it. That is the whole point of the commit.
+>
+> If you have already staged the world, `git reset` unstages everything without touching your files. And if `git push -u origin main` says `src refspec main does not match any`, your branch is called `master` — `git branch -M main` renames it.
+
+**The free-tier trade-off you must design around:** Render's free instance **spins down after ~15 minutes idle**, and the next request takes **50–60 seconds** to wake it. Plan for this in Part 9 or it will look like a bug: set the mobile client's request timeout to **90 seconds** (not the default 10), show an explicit "waking up the server…" state rather than a spinner that appears frozen, and fire a throwaway `GET /health` when the app launches so the server warms up while the user is still lining up their photo.
+
+**Memory fits with room to spare** — and only because we went lightweight. A full-TensorFlow server would not survive 512 MB; the LiteRT one sits at roughly 250–300 MB.
+
+**One security caveat:** a public repo means your code and endpoint are public. Fine for an MVP. To lock it down, add an API-key check in `app.py` (read a key from an environment variable, compare it against a request header) and set that key as an environment variable in the Render dashboard — never commit it.
 
 # Part 9. The Mobile App (Expo / React Native)
 
@@ -827,11 +944,19 @@ CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "7860"]
 Because the brains live in your online backend, the app's whole job is: **take a photo → POST it to your URL → render the JSON**. That's it. The app carries no model and no logic tables, which keeps it tiny and means a model update never requires an app update.
 
 **Do the following:**
-1. Point `API` at the public URL from Part 8 (the `https://<...>.hf.space/analyze` one — **https**, since app stores require secure connections).
+1. Point `API` at the public URL from Part 8 (the `https://<your-service>.onrender.com/analyze` one — **https**, since app stores require secure connections).
 2. Use `expo-camera`'s `CameraView` to capture a still with `takePictureAsync`.
 3. Send the photo as multipart form-data with `fetch`, and render the returned JSON — including **loading** and **error** states, and a gentle "not sure" message when confidence is low.
 
 **Why the loading/error/low-confidence states matter:** a network call takes a moment and can fail (bad signal, server asleep), so a frozen screen reads as a broken app — show a spinner and catch errors. And when the model's top probability is low, saying *"I'm not sure — try a clearer, closer photo"* instead of a confident wrong guess is what makes users trust it. **Multipart form-data** is used because it's the standard way to POST a file over HTTP and exactly what your FastAPI `UploadFile` endpoint expects.
+
+> ### Design for the cold start
+>
+> On Render's free tier the server sleeps after ~15 minutes idle and takes **50–60 seconds** to wake. `fetch` has no timeout by default and some environments abort at 10 seconds, so the very first scan of the day can fail before the server has even finished starting. Three cheap fixes, all worth doing:
+>
+> - **Warm it on launch.** Fire a throwaway `fetch(API.replace("/analyze", "/health")).catch(() => {})` when the app mounts. The server then wakes while the user is still lining up their photo.
+> - **Allow 90 seconds.** Wrap the request with an `AbortController` and a 90-second timer rather than relying on the default.
+> - **Say what is happening.** If a request runs past ~3 seconds, swap the spinner label to *"Waking up the server, this can take a minute the first time…"*. A silent spinner for 50 seconds reads as a crash; a labelled one reads as patience.
 
 ```jsx
 // ▶ App.js  (Expo / React Native)  — calls your online backend
@@ -839,7 +964,7 @@ import { useState, useRef } from "react";
 import { View, Text, Button, ActivityIndicator, ScrollView } from "react-native";
 import { CameraView, useCameraPermissions } from "expo-camera";
 
-const API = "https://your-username-bananavision.hf.space/analyze";  // <- your Space URL
+const API = "https://bananavision-api.onrender.com/analyze";  // <- your Render URL
 
 export default function App() {
   const [permission, requestPermission] = useCameraPermissions();
