@@ -1,0 +1,41 @@
+{
+  "expo": {
+    "name": "BananaVision",
+    "slug": "app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#D3F1EA",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      }
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-font",
+      "@react-native-vector-icons/feather",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "BananaVision uses your camera to photograph bananas and check how ripe they are.",
+          "recordAudioAndroid": false
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "BananaVision lets you choose a banana photo from your library to check how ripe it is."
+        }
+      ]
+    ]
+  }
+}
