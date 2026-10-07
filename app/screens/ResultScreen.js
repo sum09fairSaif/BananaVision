@@ -225,7 +225,7 @@ export default function ResultScreen({ photo, result, onScanAgain, onRetake, onH
               Good to know
             </AppText>
             <AppText variant="callout" tone="ink3" style={{ marginTop: 2 }}>
-              Swipe through {sections.length} {sections.length === 1 ? "bubble" : "bubbles"}
+              Swipe sideways to read each bubble
             </AppText>
           </Reveal>
         </View>

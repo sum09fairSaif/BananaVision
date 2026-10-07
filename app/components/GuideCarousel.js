@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   View,
   Text,
-  ScrollView,
   Pressable,
   Animated,
   Easing,
@@ -18,7 +17,6 @@ import Svg, {
   RadialGradient,
   Stop,
 } from "react-native-svg";
-import ChevronsDown from "lucide-react-native/icons/chevrons-down";
 import Sparkles from "lucide-react-native/icons/sparkles";
 import Leaf from "lucide-react-native/icons/leaf";
 import HeartHandshake from "lucide-react-native/icons/heart-handshake";
@@ -47,6 +45,49 @@ const FALLBACK_LOOK = { icon: BookOpen, tint: "#2FBFB1" };
 const SIDE_SCALE = 0.8;
 const VISIBLE_GAP = 14;
 
+// The text column as a fraction of the bubble's width, and how much of the
+// bubble's height that column may fill before its corners leave the curve.
+// For a column 0.70 wide: (0.70)^2 + f^2 = 1, so f = 0.71 of the height.
+const TEXT_WIDTH = 0.7;
+const TEXT_FILL = 0.7;
+// Past this the bubble stops looking like a bubble, so the text carries on in
+// the next one instead. Nothing is hidden either way — a bubble always grows
+// to hold whatever it is given; this only decides where to break.
+const TALLEST = 1.55;
+
+/**
+ * Split a section so each bubble holds as much as it can without stretching
+ * past TALLEST. Breaks between sentences, never mid-sentence, and keeps
+ * paragraphs together where they fit.
+ */
+function paginate(paragraphs, charsPerLine, linesPerBubble) {
+  const linesFor = (page) =>
+    page.reduce((total, p) => total + Math.max(1, Math.ceil(p.length / charsPerLine)), 0);
+  const pages = [];
+  let page = [];
+
+  for (const paragraph of paragraphs) {
+    let started = false; // has this paragraph begun on the current bubble?
+    // One sentence at a time, so a break always lands at a full stop.
+    for (const sentence of paragraph.match(/[^.!?]+[.!?]*\s*/g) ?? [paragraph]) {
+      const piece = sentence.trim();
+      if (!piece) continue;
+      const grown = started
+        ? [...page.slice(0, -1), `${page[page.length - 1]} ${piece}`]
+        : [...page, piece];
+      if (page.length && linesFor(grown) > linesPerBubble) {
+        pages.push(page);
+        page = [piece];
+      } else {
+        page = grown;
+      }
+      started = true;
+    }
+  }
+  if (page.length) pages.push(page);
+  return pages;
+}
+
 /**
  * The stage guide as a row of floating soap bubbles, one section per bubble.
  * Swipe right-to-left for the next bubble, left-to-right to go back. The
@@ -67,16 +108,34 @@ export default function GuideCarousel({ sections }) {
   const [index, setIndex] = useState(0);
   const indexRef = useRef(0);
 
-  const bubbles = useMemo(
-    () =>
-      sections
-        .map((section) => ({ ...section, paragraphs: toParagraphs(section.body) }))
-        .filter((section) => section.paragraphs.length > 0),
-    [sections],
-  );
-
   // Big enough to read inside, small enough that neighbours peek in.
-  const diameter = Math.min(width - 64, 380);
+  const diameter = Math.min(width - 48, 380);
+
+  const bubbles = useMemo(() => {
+    // Roughly how much text one bubble holds. DM Sans averages about half its
+    // point size per character, and the text column is TEXT_WIDTH of the bubble.
+    const charsPerLine = Math.max(16, Math.floor((diameter * TEXT_WIDTH) / 6.9));
+    // The height left for text once the icon and title have taken theirs.
+    const linesPerBubble = Math.max(4, Math.floor((diameter * TALLEST * TEXT_FILL - 90) / 22));
+
+    return sections.flatMap((section) => {
+      const pages = paginate(toParagraphs(section.body), charsPerLine, linesPerBubble);
+      return pages.map((paragraphs, i) => ({
+        ...section,
+        id: pages.length > 1 ? `${section.key}-${i}` : section.key,
+        paragraphs,
+        continued: i > 0,
+      }));
+    });
+  }, [sections, diameter]);
+
+  // Every bubble is as tall as its own text, so the row is as tall as the
+  // tallest one. Each reports its height once it has measured itself.
+  const [heights, setHeights] = useState({});
+  const reportHeight = useCallback((key, value) => {
+    setHeights((current) => (current[key] === value ? current : { ...current, [key]: value }));
+  }, []);
+  const rowHeight = Math.max(diameter, ...Object.values(heights));
   // Negative spacing pulls the shrunken neighbours in to a small visible gap.
   const gap = VISIBLE_GAP - (diameter * (1 - SIDE_SCALE)) / 2;
   const interval = diameter + gap;
@@ -89,7 +148,9 @@ export default function GuideCarousel({ sections }) {
       setIndex(next);
       select();
       AccessibilityInfo.announceForAccessibility(
-        `${bubbles[next].title}, section ${next + 1} of ${bubbles.length}`,
+        `${bubbles[next].title}${bubbles[next].continued ? ", continued" : ""}, ${next + 1} of ${
+          bubbles.length
+        }`,
       );
     },
     [bubbles],
@@ -113,11 +174,11 @@ export default function GuideCarousel({ sections }) {
 
   return (
     <View onLayout={(event) => setMeasured(event.nativeEvent.layout.width)}>
-      <RisingBubbles width={width} height={diameter + space.lg * 2} />
+      <RisingBubbles width={width} height={rowHeight + space.lg * 2} />
       <Animated.FlatList
         ref={listRef}
         data={bubbles}
-        keyExtractor={(item) => item.key}
+        keyExtractor={(item) => item.id}
         horizontal
         showsHorizontalScrollIndicator={false}
         snapToInterval={interval}
@@ -128,18 +189,24 @@ export default function GuideCarousel({ sections }) {
         onMomentumScrollEnd={(event) =>
           settleOn(Math.round(event.nativeEvent.contentOffset.x / interval))
         }
-        contentContainerStyle={{ paddingHorizontal: sidePadding, paddingVertical: space.lg }}
+        contentContainerStyle={{
+          paddingHorizontal: sidePadding,
+          paddingVertical: space.lg,
+          // Bubbles differ in height, so they hang from a shared centre line.
+          alignItems: "center",
+        }}
         getItemLayout={(_, i) => ({ length: interval, offset: interval * i, index: i })}
         renderItem={({ item, index: i }) => (
           <View style={{ marginRight: i < bubbles.length - 1 ? gap : 0 }}>
-          <Bubble
-            section={item}
-            position={i}
-            total={bubbles.length}
-            diameter={diameter}
-            interval={interval}
-            scrollX={scrollX}
-          />
+            <Bubble
+              section={item}
+              position={i}
+              total={bubbles.length}
+              diameter={diameter}
+              interval={interval}
+              scrollX={scrollX}
+              onMeasure={reportHeight}
+            />
           </View>
         )}
       />
@@ -151,15 +218,15 @@ export default function GuideCarousel({ sections }) {
   );
 }
 
-function Bubble({ section, position, total, diameter, interval, scrollX }) {
+function Bubble({ section, position, total, diameter, interval, scrollX, onMeasure }) {
   const { colors, fonts, space, dark } = useTheme();
   const reduced = useReducedMotion();
   const look = LOOK[section.key] ?? FALLBACK_LOOK;
   const Icon = look.icon;
   const bob = useRef(new Animated.Value(0)).current;
-  const [overflowing, setOverflowing] = useState(false);
-  const [atEnd, setAtEnd] = useState(false);
-  const sizes = useRef({ box: 0, content: 0 });
+  // The bubble is drawn around its text, so nothing is ever hidden: measure the
+  // words first, then stretch the film to hold them.
+  const [contentHeight, setContentHeight] = useState(0);
 
   // Each bubble drifts on its own rhythm, like it's floating.
   useEffect(() => {
@@ -175,30 +242,42 @@ function Bubble({ section, position, total, diameter, interval, scrollX }) {
     return () => loop.stop();
   }, [bob, position, reduced]);
 
-  function measure(box, content) {
-    sizes.current = { box: box ?? sizes.current.box, content: content ?? sizes.current.content };
-    const { box: b, content: c } = sizes.current;
-    if (b && c) setOverflowing(c > b + 1);
-  }
-
   const inputRange = [(position - 1) * interval, position * interval, (position + 1) * interval];
   const scale = scrollX.interpolate({ inputRange, outputRange: [SIDE_SCALE, 1, SIDE_SCALE], extrapolate: "clamp" });
   const opacity = scrollX.interpolate({ inputRange, outputRange: [0.55, 1, 0.55], extrapolate: "clamp" });
   const translateY = bob.interpolate({ inputRange: [0, 1], outputRange: [0, -6] });
 
-  // Text lives in a box inset far enough that its corners stay inside the circle.
-  const insetX = diameter * 0.17;
-  const insetTop = diameter * 0.12;
-  const insetBottom = diameter * 0.15;
+  // Text sits in a column whose corners have to stay inside the curve. For a
+  // column this wide, that leaves TEXT_FILL of the bubble's height to fill —
+  // so the height the words need decides how tall the bubble is drawn.
+  const textWidth = diameter * TEXT_WIDTH;
+  const height = Math.max(diameter, Math.ceil(contentHeight / TEXT_FILL));
+
+  // The row has to be as tall as the tallest bubble in it.
+  useEffect(() => {
+    onMeasure?.(section.id, height);
+  }, [onMeasure, section.id, height]);
   const inside = dark ? colors.elevated : "#FFFFFF";
-  const id = `bubble-${section.key}`;
+  const id = `bubble-${section.id}`;
+
+  // Light catching the film, as arcs of the rim itself so they follow the
+  // curve however far the bubble has stretched.
+  const rx = diameter / 2 - 2;
+  const ry = height / 2 - 2;
+  const rim = Math.PI * (3 * (rx + ry) - Math.sqrt((3 * rx + ry) * (rx + 3 * ry)));
+  const sparkle = { x: diameter / 2 + rx * 0.76 * -1, y: height / 2 - ry * 0.62 };
 
   return (
     <Animated.View
-      style={{ width: diameter, height: diameter, opacity, transform: [{ translateY }, { scale }] }}
+      style={{
+        width: diameter,
+        height,
+        opacity: contentHeight ? opacity : 0,
+        transform: [{ translateY }, { scale }],
+      }}
     >
       {/* Soap-film body: clear centre, colour gathering toward the rim. */}
-      <Svg width={diameter} height={diameter} viewBox="0 0 100 100" style={{ position: "absolute" }}>
+      <Svg width={diameter} height={height} style={{ position: "absolute" }}>
         <Defs>
           {/* Even inside colour over the whole text area; the film colour gathers at the rim. */}
           <RadialGradient id={`${id}-body`} cx="50%" cy="50%" r="50%">
@@ -214,127 +293,113 @@ function Bubble({ section, position, total, diameter, interval, scrollX }) {
             <Stop offset="1" stopColor="#9BE3A8" />
           </SvgLinearGradient>
         </Defs>
-        <Circle cx="50" cy="50" r="48.5" fill={`url(#${id}-body)`} />
-        <Circle cx="50" cy="50" r="48.5" fill="none" stroke={`url(#${id}-rim)`} strokeWidth="1.4" strokeOpacity={0.85} />
+        <Ellipse cx={diameter / 2} cy={height / 2} rx={rx} ry={ry} fill={`url(#${id}-body)`} />
+        <Ellipse
+          cx={diameter / 2}
+          cy={height / 2}
+          rx={rx}
+          ry={ry}
+          fill="none"
+          stroke={`url(#${id}-rim)`}
+          strokeWidth={4.5}
+          strokeOpacity={0.85}
+        />
       </Svg>
 
       <View
         style={{
           position: "absolute",
-          top: insetTop,
-          bottom: insetBottom,
-          left: insetX,
-          right: insetX,
+          top: 0,
+          bottom: 0,
+          left: (diameter - textWidth) / 2,
+          width: textWidth,
           alignItems: "center",
+          justifyContent: "center",
         }}
       >
         <View
-          style={{
-            width: 34,
-            height: 34,
-            borderRadius: 17,
-            alignItems: "center",
-            justifyContent: "center",
-            backgroundColor: look.tint + (dark ? "33" : "22"),
-          }}
+          onLayout={(event) => setContentHeight(event.nativeEvent.layout.height)}
+          accessible
+          accessibilityLabel={`${section.title}${section.continued ? ", continued" : ""}, ${
+            position + 1
+          } of ${total}. ${stripCitations(section.paragraphs.join(" "))}`}
+          style={{ alignItems: "center", alignSelf: "stretch", gap: space.xs }}
         >
-          <Icon size={18} color={dark ? colors.ink : look.tint} strokeWidth={2.2} />
-        </View>
-        <AppText
-          variant="headline"
-          accessibilityRole="header"
-          numberOfLines={2}
-          style={{ fontFamily: fonts.display, fontSize: 20, lineHeight: 25, textAlign: "center", marginTop: space.xs }}
-        >
-          {section.title}
-        </AppText>
-
-        <View style={{ flex: 1, alignSelf: "stretch", marginTop: space.xs }}>
-          <ScrollView
-            style={{ flex: 1 }}
-            nestedScrollEnabled
-            showsVerticalScrollIndicator={false}
-            // Measured on the scroller itself, not its parent: the hint below
-            // takes height, so the parent is taller than what the text can use.
-            onLayout={(event) => measure(event.nativeEvent.layout.height, undefined)}
-            onContentSizeChange={(_, h) => measure(undefined, h)}
-            onScroll={(event) => {
-              const { contentOffset, contentSize, layoutMeasurement } = event.nativeEvent;
-              setAtEnd(contentOffset.y + layoutMeasurement.height >= contentSize.height - 8);
-            }}
-            scrollEventThrottle={32}
-            accessible
-            accessibilityLabel={`${section.title}, section ${position + 1} of ${total}. ${stripCitations(section.paragraphs.join(" "))}`}
-            // The tail padding matters: without it the last line ends flush with
-            // the viewport edge and its descenders get shaved off.
-            contentContainerStyle={{ gap: space.xs, paddingBottom: space.sm }}
-          >
-            {section.paragraphs.map((paragraph, i) => (
-              <AppText key={i} variant="callout" tone="ink2" style={{ textAlign: "center" }}>
-                {splitCitations(paragraph).map((part, j) =>
-                  part.citation ? (
-                    <Text key={j} style={{ fontFamily: fonts.textMedium, fontSize: 11, color: colors.ink3 }}>
-                      {part.text}
-                    </Text>
-                  ) : (
-                    part.text
-                  ),
-                )}
-              </AppText>
-            ))}
-          </ScrollView>
-
-          {/* Sits under the text, not over it, and always holds its height —
-              appearing only when needed would resize the text box underneath it. */}
           <View
-            pointerEvents="none"
-            importantForAccessibility="no-hide-descendants"
-            accessibilityElementsHidden
             style={{
-              alignSelf: "center",
-              flexDirection: "row",
+              width: 34,
+              height: 34,
+              borderRadius: 17,
               alignItems: "center",
-              gap: 2,
-              paddingTop: space.xxs,
-              opacity: overflowing && !atEnd ? 1 : 0,
+              justifyContent: "center",
+              backgroundColor: look.tint + (dark ? "33" : "22"),
             }}
           >
-            <ChevronsDown size={14} color={colors.accent} strokeWidth={2.4} />
-            <AppText variant="caption" tone="accent" style={{ fontFamily: fonts.textSemibold }}>
-              Scroll for more
-            </AppText>
+            <Icon size={18} color={dark ? colors.ink : look.tint} strokeWidth={2.2} />
           </View>
+          <View style={{ alignItems: "center" }}>
+            <AppText
+              variant="headline"
+              accessibilityRole="header"
+              style={{ fontFamily: fonts.display, fontSize: 20, lineHeight: 25, textAlign: "center" }}
+            >
+              {section.title}
+            </AppText>
+            {section.continued ? (
+              <AppText variant="caption" tone="ink3" style={{ textAlign: "center" }}>
+                continued
+              </AppText>
+            ) : null}
+          </View>
+
+          {section.paragraphs.map((paragraph, i) => (
+            <AppText key={i} variant="callout" tone="ink2" style={{ textAlign: "center" }}>
+              {splitCitations(paragraph).map((part, j) =>
+                part.citation ? (
+                  <Text key={j} style={{ fontFamily: fonts.textMedium, fontSize: 11, color: colors.ink3 }}>
+                    {part.text}
+                  </Text>
+                ) : (
+                  part.text
+                ),
+              )}
+            </AppText>
+          ))}
         </View>
       </View>
 
-      {/* Light catching the film: a curved glint and a small sparkle. */}
-      <Svg
-        pointerEvents="none"
-        width={diameter}
-        height={diameter}
-        viewBox="0 0 100 100"
-        style={{ position: "absolute" }}
-      >
-        <Path
-          d="M 7.8 35.2 A 45 45 0 0 1 31 9.2"
-          stroke="#FFFFFF"
-          strokeWidth="2.6"
-          strokeLinecap="round"
+      <Svg pointerEvents="none" width={diameter} height={height} style={{ position: "absolute" }}>
+        {/* Dashes cut an arc out of the rim: upper left for the long catch-light,
+            lower right for the faint one. */}
+        <Ellipse
+          cx={diameter / 2}
+          cy={height / 2}
+          rx={rx}
+          ry={ry}
           fill="none"
+          stroke="#FFFFFF"
+          strokeWidth={8}
+          strokeLinecap="round"
+          strokeDasharray={[rim * 0.13, rim]}
+          strokeDashoffset={-rim * 0.56}
           opacity={dark ? 0.5 : 0.95}
         />
-        <Ellipse cx="17" cy="19" rx="2.2" ry="1.6" fill="#FFFFFF" opacity={dark ? 0.5 : 0.95} />
-        <Path
-          d="M 92.3 65.4 A 45 45 0 0 1 72.5 89"
-          stroke="#FFFFFF"
-          strokeWidth="1.6"
-          strokeLinecap="round"
+        <Ellipse
+          cx={diameter / 2}
+          cy={height / 2}
+          rx={rx}
+          ry={ry}
           fill="none"
+          stroke="#FFFFFF"
+          strokeWidth={5}
+          strokeLinecap="round"
+          strokeDasharray={[rim * 0.08, rim]}
+          strokeDashoffset={-rim * 0.08}
           opacity={dark ? 0.25 : 0.7}
         />
+        <Ellipse cx={sparkle.x} cy={sparkle.y} rx={7} ry={5} fill="#FFFFFF" opacity={dark ? 0.5 : 0.95} />
       </Svg>
 
-      {/* Two tiny companion bubbles drifting off the rim. */}
       {/* Little bubbles gathered in the open corners around the big one. */}
       {CLUSTER.map(([x, y, s, colour, phase], i) => {
         // Alternate bubbles mirror the layout so neighbours don't look stamped.
@@ -345,7 +410,7 @@ function Bubble({ section, position, total, diameter, interval, scrollX }) {
             key={i}
             size={size}
             left={cx * diameter - size / 2}
-            top={y * diameter - size / 2}
+            top={y * height - size / 2}
             tint={colour === "section" ? look.tint : colour}
             drift={bob}
             phase={phase}
