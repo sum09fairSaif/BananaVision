@@ -178,7 +178,7 @@ function Bubble({ section, position, total, diameter, interval, scrollX }) {
   function measure(box, content) {
     sizes.current = { box: box ?? sizes.current.box, content: content ?? sizes.current.content };
     const { box: b, content: c } = sizes.current;
-    if (b && c) setOverflowing(c > b + 4);
+    if (b && c) setOverflowing(c > b + 1);
   }
 
   const inputRange = [(position - 1) * interval, position * interval, (position + 1) * interval];
@@ -249,14 +249,14 @@ function Bubble({ section, position, total, diameter, interval, scrollX }) {
           {section.title}
         </AppText>
 
-        <View
-          style={{ flex: 1, alignSelf: "stretch", marginTop: space.xs }}
-          onLayout={(event) => measure(event.nativeEvent.layout.height, undefined)}
-        >
+        <View style={{ flex: 1, alignSelf: "stretch", marginTop: space.xs }}>
           <ScrollView
             style={{ flex: 1 }}
             nestedScrollEnabled
             showsVerticalScrollIndicator={false}
+            // Measured on the scroller itself, not its parent: the hint below
+            // takes height, so the parent is taller than what the text can use.
+            onLayout={(event) => measure(event.nativeEvent.layout.height, undefined)}
             onContentSizeChange={(_, h) => measure(undefined, h)}
             onScroll={(event) => {
               const { contentOffset, contentSize, layoutMeasurement } = event.nativeEvent;
@@ -265,7 +265,9 @@ function Bubble({ section, position, total, diameter, interval, scrollX }) {
             scrollEventThrottle={32}
             accessible
             accessibilityLabel={`${section.title}, section ${position + 1} of ${total}. ${stripCitations(section.paragraphs.join(" "))}`}
-            contentContainerStyle={{ gap: space.xs }}
+            // The tail padding matters: without it the last line ends flush with
+            // the viewport edge and its descenders get shaved off.
+            contentContainerStyle={{ gap: space.xs, paddingBottom: space.sm }}
           >
             {section.paragraphs.map((paragraph, i) => (
               <AppText key={i} variant="callout" tone="ink2" style={{ textAlign: "center" }}>
@@ -282,27 +284,26 @@ function Bubble({ section, position, total, diameter, interval, scrollX }) {
             ))}
           </ScrollView>
 
-          {/* Sits under the text (not over it); stays in place at the end so nothing jumps. */}
-          {overflowing ? (
-            <View
-              pointerEvents="none"
-              importantForAccessibility="no-hide-descendants"
-              accessibilityElementsHidden
-              style={{
-                alignSelf: "center",
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 2,
-                paddingTop: space.xxs,
-                opacity: atEnd ? 0 : 1,
-              }}
-            >
-              <ChevronsDown size={14} color={colors.accent} strokeWidth={2.4} />
-              <AppText variant="caption" tone="accent" style={{ fontFamily: fonts.textSemibold }}>
-                Scroll for more
-              </AppText>
-            </View>
-          ) : null}
+          {/* Sits under the text, not over it, and always holds its height —
+              appearing only when needed would resize the text box underneath it. */}
+          <View
+            pointerEvents="none"
+            importantForAccessibility="no-hide-descendants"
+            accessibilityElementsHidden
+            style={{
+              alignSelf: "center",
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 2,
+              paddingTop: space.xxs,
+              opacity: overflowing && !atEnd ? 1 : 0,
+            }}
+          >
+            <ChevronsDown size={14} color={colors.accent} strokeWidth={2.4} />
+            <AppText variant="caption" tone="accent" style={{ fontFamily: fonts.textSemibold }}>
+              Scroll for more
+            </AppText>
+          </View>
         </View>
       </View>
 

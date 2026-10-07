@@ -65,7 +65,7 @@ const COPY = {
   [ErrorKind.INVALID_IMAGE]: {
     icon: ImageOff,
     title: "We couldn't read that photo",
-    message: "The file may be damaged or in an unsupported format. Try taking a new photo.",
+    message: "The file may be damaged, or in a format we can't read. Try taking a new photo.",
     action: "retake",
   },
   [ErrorKind.TOO_LARGE]: {

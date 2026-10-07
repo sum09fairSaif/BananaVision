@@ -43,7 +43,7 @@ export default function PrebioticPanel({ data, explainer }) {
         <View style={{ flexDirection: "row", alignItems: "center", gap: space.xs }}>
           <Sprout size={16} color={tone} strokeWidth={2.4} />
           <AppText variant="eyebrow" tone="onAccentSoft">
-            Prebiotics
+            Food for your gut
           </AppText>
         </View>
 
@@ -109,7 +109,7 @@ export default function PrebioticPanel({ data, explainer }) {
             }}
           >
             <AppText variant="caption" tone="ink3">
-              WHAT THAT MEANS
+              WHAT THIS MEANS
             </AppText>
             {[explainer.what, explainer.how, explainer.why].filter(Boolean).map((line, i) => (
               <Cited key={i} text={line} variant="footnote" />
@@ -122,7 +122,7 @@ export default function PrebioticPanel({ data, explainer }) {
 }
 
 // One measured figure: name on the left, value on the right, and a bar for
-// anything carrying a share of the daily value.
+// anything that covers part of a day's fibre.
 function FactRow({ fact }) {
   const { colors, fonts, space } = useTheme();
   const share = typeof fact.dv === "number" ? Math.max(0, Math.min(1, fact.dv)) : null;
@@ -131,7 +131,7 @@ function FactRow({ fact }) {
     <View
       accessible
       accessibilityLabel={`${fact.label}: ${stripCitations(fact.value)}${
-        share !== null ? `, ${Math.round(share * 100)} percent of the daily fibre value` : ""
+        share !== null ? `, ${Math.round(share * 100)} percent of the fibre you need in a day` : ""
       }${fact.note ? `. ${fact.note}` : ""}`}
       style={{ gap: 3 }}
     >
@@ -164,7 +164,7 @@ function FactRow({ fact }) {
             />
           </View>
           <AppText variant="caption" tone="ink3">
-            {Math.round(share * 100)}% daily fibre
+            {Math.round(share * 100)}% of a day's fibre
           </AppText>
         </View>
       ) : fact.note ? (

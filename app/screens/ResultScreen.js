@@ -29,20 +29,20 @@ import RipenessSpectrum, { STAGE_NAMES } from "../components/RipenessSpectrum";
 
 // The headings banana_content.py extracts, ordered by what people ask first.
 const SECTIONS = [
-  { key: "benefits", title: "Benefits at this stage" },
-  { key: "nutrients", title: "Essential nutrients" },
-  { key: "encouraged_for", title: "Good for" },
-  { key: "avoid_or_limit", title: "Who should limit or avoid" },
-  { key: "risks", title: "Potential risks" },
-  { key: "missing", title: "What's missing" },
+  { key: "benefits", title: "Why it's good now" },
+  { key: "nutrients", title: "What's in it" },
+  { key: "encouraged_for", title: "Best for" },
+  { key: "avoid_or_limit", title: "Go easy if…" },
+  { key: "risks", title: "Watch out for" },
+  { key: "missing", title: "What you miss" },
 ];
 const KNOWN_KEYS = new Set(SECTIONS.map((s) => s.key));
 
 const STAGE_SUMMARY = {
-  unripe: "Firm and starchy, with the gentlest effect on blood sugar. Give it a few days for sweetness.",
-  ripe: "Sweet, soft, and easy to digest — the best all-round stage.",
-  overripe: "At its sweetest and softest. Ideal for baking, smoothies, or a quick energy boost.",
-  rotten: "Past the point of eating. Please discard it or add it to compost.",
+  unripe: "Firm and not very sweet yet, and the best one for your gut. Leave it a few days if you want it sweeter.",
+  ripe: "Sweet, soft and easy on your stomach — the best all-rounder.",
+  overripe: "As sweet and soft as it gets. Perfect for baking, smoothies, or a quick lift.",
+  rotten: "Too far gone to eat. Throw it away or put it in the compost.",
 };
 
 const LOW_CONFIDENCE = 0.6;
@@ -75,7 +75,7 @@ function facts({ edible, confidence, days_remaining: days }) {
       a11y: edible ? "Safe to eat." : "Not safe to eat.",
     },
     { label: "Keeps for", ...keeps },
-    { label: "Confidence", value: `${percent}%`, a11y: `Confidence ${percent} percent.` },
+    { label: "How sure", value: `${percent}%`, a11y: `We are ${percent} percent sure.` },
   ];
 }
 
@@ -222,11 +222,10 @@ export default function ResultScreen({ photo, result, onScanAgain, onRetake, onH
 
           <Reveal delay={260} style={{ marginTop: space.xxxl }}>
             <AppText variant="title" accessibilityRole="header">
-              What to know
+              Good to know
             </AppText>
             <AppText variant="callout" tone="ink3" style={{ marginTop: 2 }}>
-              Swipe through {sections.length} {sections.length === 1 ? "section" : "sections"} from the
-              stage guide
+              Swipe through {sections.length} {sections.length === 1 ? "bubble" : "bubbles"}
             </AppText>
           </Reveal>
         </View>
@@ -243,7 +242,7 @@ export default function ResultScreen({ photo, result, onScanAgain, onRetake, onH
                 Nutrition facts
               </AppText>
               <AppText variant="callout" tone="ink3" style={{ marginTop: 2, marginBottom: space.md }}>
-                What stays the same at every stage
+                The bits that hardly change as it ripens
               </AppText>
               <NutritionFacts data={result.nutrition} />
             </Reveal>
@@ -259,14 +258,14 @@ export default function ResultScreen({ photo, result, onScanAgain, onRetake, onH
                 icon={BookOpen}
                 iconPlacement="leading"
                 onPress={() => onSources(result.sources)}
-                accessibilityHint="Every reference behind these figures"
+                accessibilityHint="Where all these numbers come from"
               />
             </Reveal>
           ) : null}
 
           <AppText variant="footnote" tone="ink3" style={{ marginTop: space.lg }}>
-            General educational guidance, not medical, dietary, or food-safety advice.
-            Numbers in brackets refer to the numbered sources.
+            General information to help you choose a banana — not medical or diet advice.
+            The small numbers in brackets point to the list of sources.
           </AppText>
         </View>
       </Animated.ScrollView>

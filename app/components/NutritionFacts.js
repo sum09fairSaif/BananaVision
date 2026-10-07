@@ -28,12 +28,33 @@ export default function NutritionFacts({ data }) {
         ) : null}
       </View>
 
+      {/* Column headings, so the bare "%" beside each number means something. */}
+      <View
+        accessibilityElementsHidden
+        importantForAccessibility="no-hide-descendants"
+        style={{
+          flexDirection: "row",
+          alignItems: "flex-end",
+          gap: space.sm,
+          paddingHorizontal: space.lg,
+          paddingBottom: space.xs,
+        }}
+      >
+        <View style={{ flex: 1 }} />
+        <AppText variant="caption" tone="ink3">
+          In 100 g
+        </AppText>
+        <AppText variant="caption" tone="ink3" style={{ width: 44, textAlign: "right" }}>
+          A day
+        </AppText>
+      </View>
+
       {rows.map((row, i) => (
         <View
           key={row.label}
           accessible
           accessibilityLabel={`${row.label}: ${row.value}${
-            typeof row.dv === "number" ? `, ${Math.round(row.dv * 100)} percent daily value` : ""
+            typeof row.dv === "number" ? `, ${Math.round(row.dv * 100)} percent of what you need in a day` : ""
           }${row.note ? `. ${row.note}` : ""}`}
           style={{
             flexDirection: "row",

@@ -20,226 +20,230 @@ is right for them.
 
 ### Cross-stage cautions (apply to every stage)
 
-Two groups should be careful with bananas regardless of ripeness, because the relevant
-factor barely changes as the fruit ripens:
+Two groups need to be careful with bananas no matter how ripe they are, because what
+matters to them barely changes as the fruit ripens:
 
-- **Banana or latex-fruit allergy.** Banana is a high cross-reactivity food in
-  latex-fruit syndrome, which affects an estimated 30-50% of people with a latex
-  allergy, and bananas can also cause oral allergy symptoms in people sensitive to
-  certain pollens; reactions range from mouth itching to, rarely, anaphylaxis. Anyone
-  with a known banana or latex-fruit allergy should avoid bananas at every stage [13].
-- **Potassium restriction.** Bananas are a higher-potassium fruit (roughly 358 mg per
-  100 g), and potassium is fairly constant across ripeness [1]. People advised to limit
-  potassium — for example, some people with chronic kidney disease or high blood
-  potassium, or those on medicines that raise potassium — should limit portions and
-  follow their care team's guidance at every stage [11].
+- **Banana or latex allergy.** If you are allergic to latex, there is a good chance you
+  react to bananas too — it happens to roughly 30 to 50 out of every 100 people with a
+  latex allergy. Bananas can also make your mouth itch if you react to certain pollens.
+  Most reactions are mild, but a serious one is possible. If you know you react to
+  bananas or to latex, don't eat them at any stage [13].
+- **Too much potassium.** Bananas are high in potassium (about 358 mg in 100 g), and
+  that stays the same as they ripen [1]. If a doctor has told you to go easy on
+  potassium — some people with kidney disease, for example, or people on certain
+  medicines — keep your portions small and follow their advice, whatever stage the
+  banana is at [11].
 
 ### About the data and its limits
 
-The USDA reference figures below are for "bananas, raw" and do **not** distinguish
-ripeness — USDA publishes one entry regardless of stage [1], and an independent
-retail-market analysis confirms standard databases don't capture the starch-and-sugar
-shift ripening causes [2]. Stage-specific claims come from peer-reviewed ripening
-studies [2][3][4][5], not the single USDA row. Treat exact numbers as representative,
-not precise for a given banana: values vary by cultivar, growing conditions, and storage.
+The USDA figures below are for raw banana and do not separate ripe from unripe — USDA
+publishes one set of numbers for every banana [1], and a study of bananas bought in
+shops confirmed that the usual food databases miss the way starch turns into sugar as a
+banana ripens [2]. Anything in this document about a particular stage comes from
+research that measured bananas at different stages [2][3][4][5], not from that single
+USDA row. Treat every number as a good average rather than the exact truth about the
+banana in your hand: it changes with the variety, where it grew and how it was stored.
 
 ### Baseline nutrition (per 100 g, raw banana, USDA)
 
 | Nutrient        | Amount per 100 g | Notes |
 |-----------------|------------------|-------|
 | Energy          | ~89 kcal         | [1] |
-| Carbohydrate    | ~22.8 g          | mix of starch and sugars; the ratio shifts with ripeness [1][3] |
-| Dietary fiber   | ~2.6 g           | includes pectin and resistant starch [1][6] |
-| Sugars          | ~12 g            | rises as the banana ripens [3][5] |
+| Carbohydrate    | ~22.8 g          | starch and sugar; starch turns into sugar as it ripens [1][3] |
+| Dietary fiber   | ~2.6 g           | the part you don't digest [1][6] |
+| Sugars          | ~12 g            | goes up as the banana ripens [3][5] |
 | Protein         | ~1.1 g           | [1] |
 | Fat             | ~0.3 g           | [1] |
-| Potassium       | ~358 mg          | ~11% Daily Value [1] |
-| Vitamin B6      | ~0.37 mg         | ~28% Daily Value [1] |
-| Vitamin C       | ~8.7 mg          | ~10% Daily Value [1] |
-| Magnesium       | ~27 mg           | ~7% Daily Value [1] |
-| Manganese       | ~0.27 mg         | ~12% Daily Value [1] |
+| Potassium       | ~358 mg          | ~11% of what you need in a day [1] |
+| Vitamin B6      | ~0.37 mg         | ~28% of what you need in a day [1] |
+| Vitamin C       | ~8.7 mg          | ~10% of what you need in a day [1] |
+| Magnesium       | ~27 mg           | ~7% of what you need in a day [1] |
+| Manganese       | ~0.27 mg         | ~12% of what you need in a day [1] |
 
 ### The ripening chemistry in one paragraph
 
-A banana's stage is mostly a story about one reaction: starch turning into sugar. In an
-under-ripe banana, starch makes up roughly 80-90% of the carbohydrate [5], much of it
-*resistant starch* (a starch that resists digestion and behaves like fibre) [6]. As the
-fruit ripens, enzymes convert that starch to simple sugars, so total and resistant
-starch fall while sugar and sweetness climb [3][4] — one study measured banana starch
-dropping from about 28% of the fruit when unripe to about 13% when ripe [3]. In
-parallel, total phenolic content and antioxidant activity rise [4], and fermentable
-fructans (a FODMAP) increase as the banana sweetens [12]. Because resistant starch
-raises blood sugar slowly while simple sugar raises it quickly, this same reaction makes
-a green banana low on the glycemic index and an overripe one much higher [5][6].
+Almost everything about a banana's stage comes down to one change: starch turning into
+sugar. In a green banana, starch makes up roughly 80 to 90 out of every 100 parts of
+the carbohydrate [5], and much of it is resistant starch — a starch your body cannot
+break down, which behaves like fibre [6]. As the banana ripens, it turns that starch
+into simple sugar, so the starch falls away and the sweetness climbs [3][4]. One study
+measured starch dropping from about 28% of the fruit when green to about 13% when ripe
+[3]. At the same time the antioxidants build up [4], and so do fructans, a sugar that
+can upset a sensitive gut [12]. Because your body handles starch slowly and sugar
+quickly, this same change is why a green banana barely moves your blood sugar and an
+overripe one moves it a lot [5][6].
 
 
 ## unripe
 
 ### Essential nutrients
-In a green, under-ripe banana, starch accounts for roughly 80-90% of the carbohydrate,
-and a large share is resistant starch — a starch that resists digestion and acts like
-dietary fibre — alongside pectin, another fibre [5][6]. Free (simple) sugars are low at
-this stage [3][5]. The baseline minerals and vitamins are present as in any banana:
-potassium, vitamin B6, vitamin C, and magnesium [1].
+A green banana is mostly starch — around 80 to 90 out of every 100 parts of its
+carbohydrate [5]. A lot of that is resistant starch, a kind your body cannot break
+down. It travels through you like fibre, and so does pectin, another fibre in the fruit
+[5][6]. There is very little sugar yet [3][5]. The potassium, vitamin B6, vitamin C and
+magnesium are the same as in any banana [1].
 
 ### Benefits at this stage
-The resistant starch and pectin act as prebiotics — food for beneficial gut bacteria —
-which ferment them in the colon into short-chain fatty acids such as butyrate that
-support gut health [6]. Because that starch is digested slowly, a green banana has a low
-glycemic impact (a glycemic index around 30-43), so it raises blood sugar gently and
-gives slow-release energy [5][6]; in a clinical study, under-ripe banana produced a much
-smaller blood-glucose rise than over-ripe banana or white bread [5]. Starch isolated
-from unripe bananas has also been shown to lower glycemic and insulin responses [10].
-Potassium and vitamin B6 support normal blood pressure, muscle, nerve, and metabolic
-function [6].
+This is the best stage for your gut. The starch and fibre you cannot digest reach your
+large intestine whole, and the good bacteria living there eat them. As they feed, they
+make butyrate, which is the main fuel for the cells lining your gut [6]. Because your
+body breaks this starch down slowly, a green banana barely moves your blood sugar and
+gives you energy that lasts [5][6]. In one study, people who ate an unripe banana had a
+much smaller blood sugar rise than after an overripe one or after white bread [5].
+Starch taken from green bananas has also been shown to keep blood sugar and insulin
+lower [10]. The potassium and vitamin B6 help your blood pressure, muscles and nerves
+work as they should [6].
 
 ### What's missing
-There is little of the quick simple sugar that makes riper bananas an instant energy
-source, so a green banana is less sweet and gives less of an immediate lift [3][5]. The
-phenolic antioxidants that build up during ripening have not developed yet [4]. The
-firm, starchy flesh is also harder to digest than riper fruit.
+There is hardly any quick sugar yet, so a green banana is not very sweet and won't give
+you a fast lift [3][5]. The antioxidants that build up while a banana ripens are not
+there yet [4]. And the firm flesh is harder on your stomach than a softer banana.
 
 ### Potential risks
-Because resistant starch and pectin are fermented by gut bacteria, larger amounts can
-cause gas or bloating in some people until their gut adapts [6][12]. The firm texture is
-harder on digestion, and the starchy, less-sweet taste means some people won't finish one.
+Your gut bacteria ferment this kind of starch, so a lot of it at once can leave you
+gassy or bloated until your body gets used to it [6][12]. The firm texture is harder to
+digest, and it isn't sweet, so some people don't enjoy eating one.
 
 ### Encouraged for
-People managing blood sugar — including many with type 2 diabetes or prediabetes — who
-want the gentlest glycemic impact, since a greener banana is lowest on the glycemic
-index and richest in resistant starch [5][6]. People focused on gut health, because the
-resistant starch and pectin act as prebiotics feeding beneficial bacteria [6]. People
-with IBS following a low-FODMAP diet: firm, unripe bananas are low-FODMAP in servings up
-to about one small banana (~100 g) and are usually the best-tolerated stage [12]. Those
-seeking slow-release energy and longer-lasting fullness also do well here [6][10].
+Anyone keeping an eye on their blood sugar, including many people with type 2 diabetes
+or prediabetes: a greener banana raises blood sugar the least and holds the most of the
+starch your body cannot digest [5][6]. Anyone who wants to look after their gut, since
+that starch and fibre feed the good bacteria living there [6]. People with IBS on a
+low-FODMAP diet, who usually find a firm green banana the easiest stage to handle, in
+servings up to about one small banana (100 g) [12]. And anyone who wants energy that
+lasts and keeps them full for longer [6][10].
 
 ### Who should limit or avoid
-See the cross-stage cautions above: anyone with a banana or latex-fruit allergy [13], or
-who has been told to restrict potassium [11], should avoid or limit bananas at this stage
-too. In addition: people prone to gas, bloating, or with sensitive digestion should start
-with small amounts, since resistant starch is fermented in the colon [6][12]. The firm,
-starchy texture also makes an unripe banana a poor choice as a soft food for infants or
-anyone who struggles with hard textures — a ripe banana is more appropriate there.
+Don't eat bananas at all if you are allergic to them or to latex [13], and keep
+portions small if you have been told to watch your potassium [11] — both apply at every
+stage. On top of that, if you get gas or bloating easily, or your stomach is sensitive,
+start with a small piece, because your gut bacteria ferment this starch [6][12]. A
+green banana is also too firm for a baby starting solid food, or for anyone who
+struggles with hard food — a ripe one is much better for them.
 
 
 ## ripe
 
 ### Essential nutrients
-As the starch converts, a yellow, ripe banana carries a balanced mix of simple sugars
-(glucose, fructose, and sucrose) with a smaller, declining amount of resistant starch
-[3][5]. Potassium, vitamin B6, and vitamin C remain at their usual levels [1], and the
-phenolic antioxidants that develop during ripening are now present [4].
+By the time a banana is yellow, much of its starch has turned into sugar. You get a mix
+of simple sugars — glucose, fructose and sucrose — plus a smaller and shrinking amount
+of the starch your body cannot digest [3][5]. The potassium, vitamin B6 and vitamin C
+are the same as always [1], and the antioxidants that build up during ripening are now
+there [4].
 
 ### Benefits at this stage
-This is the easiest stage to digest and the best all-rounder. The simple sugars give
-quick, accessible energy; potassium supports healthy blood pressure and normal muscle
-and nerve function; and vitamin B6 helps the body turn food into energy [6]. Its glycemic
-index is still in the low range (studies report roughly 51 for a ripe banana in reference
-databases, and about 60 for a well-ripened one) [5][6], so for most people it is a
+This is the gentlest stage on your stomach and the best all-rounder. The sugars give you
+energy you can use straight away, the potassium helps keep your blood pressure healthy
+and your muscles and nerves working properly, and vitamin B6 helps your body turn food
+into energy [6]. It still raises blood sugar fairly slowly — around 51 on a scale where
+pure glucose is 100, or about 60 for a very ripe one [5][6] — so for most people it is a
 gentle, everyday choice.
 
 ### What's missing
-Some of the resistant starch present in a green banana has already converted to sugar, so
-the prebiotic-fibre and lower-glycemic advantages of the unripe stage are reduced [2][3].
+Some of the starch that fed your gut bacteria in a green banana has already turned into
+sugar, so you get less of that gut benefit, and it lifts your blood sugar a little more
+than a green one would [2][3].
 
 ### Potential risks
-Risk at this stage is low for most people. The sugar content is higher than a green
-banana, so anyone closely managing their blood sugar should account for it, but a ripe
-banana is otherwise a well-tolerated food [5].
+There is very little to worry about at this stage. It holds more sugar than a green
+banana, so count it in if you watch your blood sugar closely. Otherwise a ripe banana
+suits almost everyone [5].
 
 ### Encouraged for
-Most of the general population, as an easy-to-digest, balanced everyday fruit [6].
-Physically active people and anyone refuelling after exercise, because the quick carbs
-help restore energy while the potassium replaces an electrolyte lost in sweat [6].
-Infants beginning solids, young children, older adults, and anyone with weaker digestion,
-since soft ripe banana is gentle and is a common early first food. People with IBS can
-usually tolerate a firm, just-ripe banana (no brown spots) at about one medium banana per
-serving [12].
+Almost everyone, as an easy everyday fruit that is kind to your stomach [6]. People who
+are active or have just finished exercising, because the quick carbohydrate brings your
+energy back and the potassium replaces a mineral you lose when you sweat [6]. Babies
+starting solid food, young children, older people, and anyone whose digestion is
+delicate, since soft ripe banana is gentle and is a common first food. People with IBS
+can usually manage a firm, just-yellow banana with no brown spots, about one medium
+banana at a time [12].
 
 ### Who should limit or avoid
-See the cross-stage cautions above (banana or latex-fruit allergy [13]; potassium
-restriction [11]). In addition: people closely managing blood glucose should keep portions
-in mind, as sugar is higher than in a green banana [5]. People with IBS who are sensitive
-to fructans should note that tolerance drops as the banana develops brown spots — once
-spotted, keep to a small serving or see the overripe stage [12].
+Don't eat bananas at all if you are allergic to them or to latex [13], and keep portions
+small if you have been told to watch your potassium [11] — both apply at every stage. On
+top of that, keep an eye on your portion if you manage your blood sugar closely, since
+there is more sugar here than in a green banana [5]. If you have IBS and react to
+fructans — a sugar that can upset a sensitive gut — bananas get harder to handle once
+brown spots appear, so keep to a small piece from then on [12].
 
 
 ## overripe
 
 ### Essential nutrients
-Heavily spotted, soft bananas have the highest simple-sugar content of any stage — they
-are the sweetest — because starch conversion is nearly complete; in one study more than
-70% of the resistant starch had been degraded by the end of storage [3]. Their phenolic
-antioxidant levels are at their peak [4]. Potassium and vitamin B6 remain, while
-resistant starch is almost entirely gone [3].
+A soft banana covered in brown spots is the sweetest stage, because nearly all its
+starch has turned into sugar: one study found more than 70 out of every 100 parts of the
+resistant starch were gone by the end of storage [3]. Its antioxidants are at their
+highest [4]. The potassium and vitamin B6 are still there, but the starch that feeds
+your gut bacteria has almost completely gone [3].
 
 ### Benefits at this stage
-The developed antioxidants and the high, fast-absorbing sugar make this a good choice for
-an immediate energy boost, and the soft flesh is very easy to digest. Nutritionally it is
-the ideal stage for baking, smoothies, or sweetening a dish without added sugar.
+There is a lot of sugar and your body takes it up quickly, so this is the banana for a
+fast lift, and the soft flesh is very easy to digest. It also carries the most
+antioxidants of any stage. This is the ideal banana for baking, for smoothies, or for
+sweetening something without adding sugar.
 
 ### What's missing
-Almost none of the resistant starch remains, so the slow-release energy, prebiotic, and
-blood-sugar-steadying benefits of the earlier stages are largely gone [3][2]. This is the
-highest glycemic-impact stage: a clinical study measured the glycemic index of over-ripe
-banana at about 74, versus about 43 for under-ripe banana [5].
+Almost none of the starch your body cannot digest is left, so the slow energy, the gut
+benefit and the steady blood sugar of the earlier stages are largely gone [2][3]. This
+stage lifts your blood sugar the most: one study measured about 74 for an overripe
+banana against about 43 for a green one, on a scale where pure glucose is 100 [5].
 
 ### Potential risks
-The high sugar and glycemic load make this the least suitable stage for tight blood-sugar
-control [5]. Overripe bananas are also commonly listed among tyramine-containing foods
-that can trigger migraine in sensitive people; heavy brown spotting is normal, but any
-fuzzy mould, a fermented or sour smell, or oozing means the banana has crossed into
-spoiled — see the rotten stage.
+All that sugar makes this the hardest stage to fit in if you need to keep your blood
+sugar steady [5]. Overripe bananas also appear on lists of foods containing tyramine, a
+natural substance that can set off a migraine in people who are prone to them. Heavy
+brown spotting is normal and fine to eat. But fuzzy mould, a sour or alcohol-like smell,
+or anything oozing means the banana has gone off — see the rotten stage.
 
 ### Encouraged for
-People who want fast-absorbing energy, such as athletes topping up before or after a hard
-effort [6]. Anyone after maximum natural sweetness and the highest antioxidant levels, or
-who wants to sweeten baking and smoothies without added sugar [4]. People who need a very
-soft, easy-to-swallow texture also do well at this stage.
+Anyone who wants energy quickly, such as an athlete before or after a hard session [6].
+Anyone after the sweetest taste and the most antioxidants, or who wants to sweeten
+baking and smoothies without adding sugar [4]. And anyone who needs food that is very
+soft and easy to swallow.
 
 ### Who should limit or avoid
-See the cross-stage cautions above (banana or latex-fruit allergy [13]; potassium
-restriction [11]). In addition: people managing diabetes or watching blood sugar should
-limit this stage, as it has the highest glycemic index of any [5]. People who get
-migraines and are sensitive to tyramine, or who take MAO-inhibitor medication, should
-limit or avoid overripe bananas — the National Headache Foundation lists banana on its
-low-tyramine diet as a fruit to limit and advises discarding overripe items [7]. People
-with IBS who are fructan-sensitive should keep to a small serving (about a third of a
-banana) or avoid this stage, as fructans are highest once bananas are spotted [12].
+Don't eat bananas at all if you are allergic to them or to latex [13], and keep portions
+small if you have been told to watch your potassium [11] — both apply at every stage. On
+top of that: go easy on this stage if you have diabetes or watch your blood sugar, since
+it raises it more than any other stage [5]. If you get migraines set off by tyramine, or
+you take a medicine called an MAO inhibitor, limit or skip overripe bananas — the
+National Headache Foundation puts banana on its low-tyramine list and says to throw out
+overripe fruit [7]. If you have IBS and react to fructans, keep to a small piece (about
+a third of a banana) or skip this stage, because fructans are highest once a banana is
+spotted [12].
 
 
 ## rotten
 
 ### Essential nutrients
-At this point nutrition is beside the point — the flesh is breaking down and may be
-supporting microbial growth.
+Nutrition is beside the point here. The fruit is breaking down, and mould or bacteria
+may be growing in it.
 
 ### Benefits at this stage
-None that are worth the risk. Discard the banana or add it to compost.
+None worth the risk. Throw the banana away or put it in the compost.
 
 ### What's missing
-Any meaningful nutritional value has been lost to spoilage.
+Spoiling has taken away whatever the banana had to offer.
 
 ### Potential risks
-Do not eat a mouldy or rotten banana. A banana is a soft, high-moisture fruit, and USDA
-guidance is that mouldy soft, high-moisture produce should be thrown out entirely,
-because the mould roots below the surface and any toxins it produces can spread through
-the fruit — "when in doubt, throw it out" [9]. Some moulds that grow on fruit produce
-mycotoxins (poisons such as patulin); eating contaminated fruit can cause nausea and
-vomiting and may damage cells [8]. Don't sniff a mouldy banana to check it, as you can
-inhale spores [9]. A banana that is only very brown and soft — no visible mould, and it
-smells sweet rather than sour or alcoholic — is generally still fine for baking, but if
-there is any doubt, discard it.
+Don't eat a mouldy or rotten banana. A banana is soft and full of moisture, and USDA
+advice for food like that is to throw the whole thing out once it goes mouldy. What you
+can see on the surface is only part of it: the mould grows down into the fruit, and
+anything harmful it makes can spread through it. When in doubt, throw it out [9]. Some
+moulds that grow on fruit make poisons — one is called patulin — that can leave you
+feeling sick and vomiting, and can damage your cells [8]. Don't sniff a mouldy banana to
+check it, because you can breathe in the spores [9]. A banana that is only very brown
+and soft, with no mould on it and a sweet rather than sour or boozy smell, is usually
+still fine for baking. If you are not sure, throw it out.
 
 ### Encouraged for
-No one — a rotten banana should not be eaten. If the fruit is spoiled, discard or compost
-it; there is no group for whom eating it is advisable.
+No one. A rotten banana should not be eaten. Throw it away or put it in the compost.
 
 ### Who should limit or avoid
-Everyone should avoid eating a mouldy or rotten banana [8][9]. Caution matters most for
-people at higher risk from foodborne illness — including pregnant people, infants and
-young children, older adults, and anyone who is immunocompromised — who should be
-especially careful never to eat spoiled or mouldy fruit [8][9].
+Everyone should avoid eating a mouldy or rotten banana [8][9]. It matters most for
+people who get ill more easily from food: if you are pregnant, a baby or young child, an
+older adult, or your immune system is weak, be especially careful never to eat spoiled
+or mouldy fruit [8][9].
 
 
 ## Sources and references

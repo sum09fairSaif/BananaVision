@@ -1,76 +1,76 @@
 {
-  "_comment": "Numbers the app shows as figures rather than prose. Source ids match the numbered list in banana_stages.md ('## Sources and references'). Edit here, not in the app.",
-  "basis": "Per 100 g of raw banana. A medium banana is about 118 g, so multiply by 1.2.",
+  "_comment": "Numbers the app shows as figures rather than prose. Source ids match the numbered list in banana_stages.md ('## Sources and references'). Written in plain, everyday English: the people reading it in the app are not nutritionists. Edit here, not in the app.",
+  "basis": "These figures are for 100 g of banana. A medium banana weighs about 118 g, so it holds a bit more.",
   "medium_banana_g": 118,
   "fiber_daily_value_g": 28,
   "prebiotic_explainer": {
-    "what": "A prebiotic is a substrate that the microbes living in you use selectively, with a health benefit for you [14].",
-    "how": "Resistant starch and pectin pass through the small intestine undigested. Gut bacteria in the colon ferment them into short-chain fatty acids, including butyrate, the main fuel for the cells lining your colon [15][6].",
-    "why": "A banana's prebiotic content is not fixed: ripening converts the resistant starch into sugar, so the greener the banana, the more prebiotic it carries [2][3]."
+    "what": "A prebiotic is food for the good bacteria living in your gut. You can't digest it yourself, so it reaches them whole [14].",
+    "how": "This kind of starch, and the pectin alongside it, pass through your stomach untouched. Once they reach your large intestine, your gut bacteria eat them and make butyrate — the main fuel for the cells lining your gut [15][6].",
+    "why": "How much a banana carries depends on how ripe it is. Ripening turns that starch into sugar, so the greener the banana, the more there is for your gut [2][3]."
   },
   "stages": {
     "unripe": {
       "level": "high",
-      "level_label": "Richest prebiotic stage",
+      "level_label": "The best stage for your gut",
       "headline_value": "~18 g",
-      "headline_label": "resistant starch and other fibre per 100 g",
+      "headline_label": "of fibre your body can't digest, in 100 g",
       "headline_sources": [2],
-      "summary": "A green banana is the prebiotic peak. Measured with the method that captures resistant starch, an unripe banana holds about 18 g of fibre per 100 g — roughly 64% of the 28 g daily fibre value, and about four times what a ripe one has [2][16].",
-      "gut": "That resistant starch and the pectin alongside it reach the colon intact, where gut bacteria ferment them into short-chain fatty acids such as butyrate [6][15]. If you are eating bananas for your gut, this is the stage to pick.",
+      "summary": "A green banana is the best one you can eat for your gut. It holds about 18 g of fibre in every 100 g — that's about two thirds of what you need in a whole day, and roughly four times what a yellow banana has [2][16].",
+      "gut": "Your body can't break this down, so it reaches your large intestine whole and your gut bacteria feed on it [6][15]. If you are eating bananas for your gut, pick this one.",
       "facts": [
-        { "label": "Fibre incl. resistant starch", "value": "~18 g", "dv": 0.64, "sources": [2] },
-        { "label": "Total starch", "value": "~21 g", "sources": [2] },
-        { "label": "Total sugars", "value": "~4 g", "sources": [2] },
-        { "label": "Fructans (FODMAP)", "value": "Lowest", "note": "firm unripe bananas are low-FODMAP up to about 100 g", "sources": [12] }
+        { "label": "Fibre you don't digest", "value": "~18 g", "dv": 0.64, "sources": [2] },
+        { "label": "Starch", "value": "~21 g", "sources": [2] },
+        { "label": "Sugar", "value": "~4 g", "sources": [2] },
+        { "label": "Can upset a sensitive gut", "value": "Least likely", "note": "a firm green banana is usually fine up to about 100 g", "sources": [12] }
       ]
     },
     "ripe": {
       "level": "moderate",
-      "level_label": "Some prebiotic left",
+      "level_label": "Some left for your gut",
       "headline_value": "~4-5 g",
-      "headline_label": "resistant starch and other fibre per 100 g",
+      "headline_label": "of fibre your body can't digest, in 100 g",
       "headline_sources": [2],
-      "summary": "By the time a banana is yellow, most of the resistant starch has become sugar. Fibre measured the same way falls to about 4-5 g per 100 g, around 16% of the daily fibre value, while sugars climb to roughly 15 g [2][16].",
-      "gut": "There is still some resistant starch and pectin for your gut bacteria to ferment [6][15], just a fraction of what a green banana offers. A firmer, just-yellow banana keeps more of it than a spotted one [2].",
+      "summary": "Once a banana turns yellow, most of that starch has become sugar. The fibre drops to about 4 to 5 g in every 100 g — roughly a sixth of what you need in a day — while the sugar climbs to about 15 g [2][16].",
+      "gut": "There is still something here for your gut bacteria to feed on [6][15], but only a fraction of what a green banana gives them. A firm yellow banana keeps more of it than a spotted one [2].",
       "facts": [
-        { "label": "Fibre incl. resistant starch", "value": "~4-5 g", "dv": 0.16, "sources": [2] },
-        { "label": "Total starch", "value": "~9-12 g", "sources": [2] },
-        { "label": "Total sugars", "value": "~15 g", "sources": [2] },
-        { "label": "Fructans (FODMAP)", "value": "Rising", "note": "tolerance drops once brown spots appear", "sources": [12] }
+        { "label": "Fibre you don't digest", "value": "~4-5 g", "dv": 0.16, "sources": [2] },
+        { "label": "Starch", "value": "~9-12 g", "sources": [2] },
+        { "label": "Sugar", "value": "~15 g", "sources": [2] },
+        { "label": "Can upset a sensitive gut", "value": "More likely", "note": "harder to handle once brown spots show up", "sources": [12] }
       ]
     },
     "overripe": {
       "level": "low",
-      "level_label": "Little prebiotic left",
+      "level_label": "Almost none left for your gut",
       "headline_value": "~2 g",
-      "headline_label": "resistant starch and other fibre per 100 g",
+      "headline_label": "of fibre your body can't digest, in 100 g",
       "headline_sources": [2],
-      "summary": "A heavily spotted banana has nearly finished converting starch to sugar. Fibre measured with the resistant-starch method drops to about 2 g per 100 g — roughly 7% of the daily fibre value, and about a ninth of a green banana's [2][16].",
-      "gut": "Very little resistant starch is left to feed your gut bacteria [2][3]. The sweetness and the antioxidants peak here, but for prebiotics this is the weakest stage.",
+      "summary": "A banana covered in brown spots has turned nearly all its starch into sugar. The fibre falls to about 2 g in every 100 g — less than a tenth of what you need in a day, and about a ninth of what a green banana has [2][16].",
+      "gut": "There is very little left for your gut bacteria to feed on [2][3]. This banana is at its sweetest and has the most antioxidants, but for your gut it is the weakest stage.",
       "facts": [
-        { "label": "Fibre incl. resistant starch", "value": "~2 g", "dv": 0.07, "sources": [2] },
-        { "label": "Total starch", "value": "~7-8 g", "sources": [2] },
-        { "label": "Total sugars", "value": "~14-15 g", "sources": [2] },
-        { "label": "Fructans (FODMAP)", "value": "Highest", "note": "keep to a small serving if fructan-sensitive", "sources": [12] }
+        { "label": "Fibre you don't digest", "value": "~2 g", "dv": 0.07, "sources": [2] },
+        { "label": "Starch", "value": "~7-8 g", "sources": [2] },
+        { "label": "Sugar", "value": "~14-15 g", "sources": [2] },
+        { "label": "Can upset a sensitive gut", "value": "Most likely", "note": "keep to a small piece if bananas usually bother you", "sources": [12] }
       ]
     },
     "rotten": {
       "level": "none",
-      "level_label": "Not for eating",
+      "level_label": "Don't eat this one",
       "headline_value": "—",
-      "headline_label": "discard or compost this one",
+      "headline_label": "throw it away or put it in the compost",
       "headline_sources": [9],
-      "summary": "Spoiled fruit is not a prebiotic question. Mouldy soft fruit should be thrown out whole, because the mould roots below the surface [9].",
-      "gut": "Whatever fibre remains is not worth the risk of mould toxins [8][9]. Compost it and scan a fresher banana.",
+      "summary": "There is no point weighing up the gut benefit of a banana that has gone off. Soft, mouldy fruit should be thrown out whole, because the mould grows down into it and you can't see how far [9].",
+      "gut": "Whatever fibre is left is not worth the risk of the poisons mould can make [8][9]. Compost this one and scan a fresher banana.",
       "facts": []
     }
   },
   "baseline": {
     "title": "Every banana, any stage",
-    "note": "USDA publishes one entry for raw banana regardless of ripeness, so these hold roughly steady as it ripens [1][2].",
+    "note": "USDA lists one set of figures for raw banana whatever its stage, so these stay about the same as it ripens [1][2].",
     "rows": [
-      { "label": "Energy", "value": "89 kcal", "sources": [1] },
-      { "label": "Carbohydrate", "value": "22.8 g", "note": "the starch-to-sugar split shifts with ripeness", "sources": [1, 2] },
+      { "label": "Calories", "value": "89 kcal", "sources": [1] },
+      { "label": "Carbs", "value": "22.8 g", "note": "starch turns into sugar as it ripens", "sources": [1, 2] },
       { "label": "Protein", "value": "1.1 g", "sources": [1] },
       { "label": "Fat", "value": "0.3 g", "sources": [1] },
       { "label": "Potassium", "value": "358 mg", "dv": 0.11, "sources": [1] },

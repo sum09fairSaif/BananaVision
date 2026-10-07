@@ -27,12 +27,12 @@ const STEPS = [
   {
     icon: Cpu,
     title: "We check it's a banana",
-    body: "The photo is resized and sent to the BananaVision server, which first confirms there's a banana in it.",
+    body: "Your photo is made smaller and sent to our server, which first checks there really is a banana in it.",
   },
   {
     icon: Sparkles,
-    title: "A trained model reads the ripeness",
-    body: "A MobileNetV2 model trained on thousands of banana photos places it as unripe, ripe, overripe, or rotten, and estimates how many days it will keep.",
+    title: "We work out how ripe it is",
+    body: "A program that has looked at thousands of banana photos decides whether yours is unripe, ripe, overripe or rotten, and works out roughly how many days it has left.",
   },
 ];
 
@@ -40,17 +40,17 @@ const GOOD_TO_KNOW = [
   {
     icon: ShieldCheck,
     title: "Private by design",
-    body: "Your first name is saved only on this phone. Photos are analyzed in memory and never stored on the server.",
+    body: "Your first name stays on this phone. Your photo is looked at and then thrown away — we never keep it.",
   },
   {
     icon: Wifi,
     title: "Needs a connection",
-    body: "Analysis happens online, so you'll need Wi‑Fi or mobile data. The first scan after a quiet spell can take up to a minute while the server wakes up.",
+    body: "The check happens online, so you need Wi‑Fi or mobile data. The first scan after a while can take up to a minute, because our server has to wake up.",
   },
   {
     icon: HeartPulse,
     title: "A helpful estimate",
-    body: "Results are a guide, not medical or dietary advice. If a banana smells off or shows mold, throw it out.",
+    body: "Treat the result as a helpful guess, not medical or diet advice. If a banana smells off or has mould on it, throw it out.",
   },
 ];
 

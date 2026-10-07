@@ -33,8 +33,8 @@ export default function SourcesScreen({ sources = [], onBack }) {
             Sources
           </AppText>
           <AppText variant="body" tone="ink2" style={{ marginTop: space.sm }}>
-            Every number and claim in BananaVision traces to one of these. The bracketed
-            numbers beside the text match this list.
+            Every number and claim in the app comes from one of these. The small numbers
+            in brackets beside the text match this list. Tap any one to read it yourself.
           </AppText>
         </Reveal>
 
@@ -83,9 +83,9 @@ export default function SourcesScreen({ sources = [], onBack }) {
 
         <Reveal delay={140} style={{ marginTop: space.xl }}>
           <AppText variant="footnote" tone="ink3">
-            General educational guidance, not medical, dietary, or food-safety advice.
-            Figures are representative: values vary by cultivar, growing conditions, and
-            storage.
+            General information to help you choose a banana — not medical or diet advice.
+            The numbers are good averages: they change with the type of banana, where it
+            grew and how it was stored.
           </AppText>
         </Reveal>
       </ScrollView>
