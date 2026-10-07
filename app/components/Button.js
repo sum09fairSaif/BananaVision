@@ -1,124 +1,97 @@
-import { useRef } from "react";
-import {
-  Pressable,
-  View,
-  ActivityIndicator,
-  Animated,
-  StyleSheet,
-} from "react-native";
-import { Feather } from "@react-native-vector-icons/feather";
+import { View, ActivityIndicator, StyleSheet } from "react-native";
 import { useTheme } from "../theme/ThemeProvider";
+import { elevation } from "../theme/tokens";
 import AppText from "./AppText";
-import { tap } from "../utils/haptics";
+import PressableScale from "./PressableScale";
 
 /**
- * variant: "primary" (one per screen), "secondary" (outlined), "quiet" (text-only)
- * icon:    Feather icon name, shown after the label unless iconPosition="start"
+ * variant: "primary"   the one filled action on a screen
+ *          "secondary" tinted, for a strong alternative next to a primary
+ *          "plain"     text only, for low-emphasis actions (Skip, Cancel)
+ * tone:    "accent" or "neutral" (plain buttons that shouldn't pull the eye)
+ * icon:    a lucide-react-native component
  */
 export default function Button({
   label,
   onPress,
   variant = "primary",
-  icon,
-  iconPosition = "end",
+  tone = "accent",
+  size = "large",
+  icon: Icon,
+  iconPlacement = "trailing",
   loading = false,
   disabled = false,
   accessibilityHint,
   style,
 }) {
-  const { colors, radius, space, motion } = useTheme();
-  const press = useRef(new Animated.Value(0)).current;
+  const theme = useTheme();
+  const { colors, radius, space } = theme;
   const inactive = disabled || loading;
+  const large = size === "large";
 
   const look = {
     primary: {
-      background: colors.primary,
-      pressed: colors.primaryPressed,
-      foreground: colors.onPrimary,
-      border: colors.primary,
+      background: colors.accent,
+      pressed: colors.accentPressed,
+      foreground: colors.onAccent,
     },
     secondary: {
-      background: colors.surface,
-      pressed: colors.surfaceSunken,
-      foreground: colors.text,
-      border: colors.borderStrong,
+      background: colors.accentSoft,
+      pressed: colors.mist,
+      foreground: colors.onAccentSoft,
     },
-    quiet: {
+    plain: {
       background: "transparent",
-      pressed: colors.primarySoft,
-      foreground: colors.onPrimarySoft,
-      border: "transparent",
+      pressed: colors.sunken,
+      foreground: tone === "neutral" ? colors.ink2 : colors.accent,
     },
   }[variant];
 
-  function animateTo(value) {
-    Animated.timing(press, {
-      toValue: value,
-      duration: motion.fast,
-      easing: motion.easeOut,
-      useNativeDriver: true,
-    }).start();
-  }
-
-  const scale = press.interpolate({ inputRange: [0, 1], outputRange: [1, 0.97] });
-
   return (
-    <Animated.View style={[{ transform: [{ scale }] }, style]}>
-      <Pressable
-        onPress={() => {
-          tap();
-          onPress?.();
-        }}
-        onPressIn={() => animateTo(1)}
-        onPressOut={() => animateTo(0)}
-        disabled={inactive}
-        accessibilityRole="button"
-        accessibilityLabel={label}
-        accessibilityHint={accessibilityHint}
-        accessibilityState={{ disabled: inactive, busy: loading }}
-        style={({ pressed }) => [
-          styles.base,
-          {
-            borderRadius: radius.pill,
-            paddingHorizontal: space.xl,
-            backgroundColor: pressed ? look.pressed : look.background,
-            borderColor: look.border,
-            opacity: disabled ? 0.45 : 1,
-          },
-        ]}
-      >
-        {loading ? (
-          <ActivityIndicator color={look.foreground} />
-        ) : (
-          <View
-            style={[
-              styles.row,
-              { gap: space.xs },
-              iconPosition === "start" && styles.rowReverse,
-            ]}
+    <PressableScale
+      onPress={onPress}
+      disabled={inactive}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      accessibilityHint={accessibilityHint}
+      accessibilityState={{ disabled: inactive, busy: loading }}
+      style={style}
+      contentStyle={({ pressed }) => [
+        styles.surface,
+        {
+          minHeight: large ? 56 : 46,
+          borderRadius: radius.button,
+          paddingHorizontal: variant === "plain" ? space.md : space.xl,
+          backgroundColor: pressed ? look.pressed : look.background,
+          opacity: disabled ? 0.38 : 1,
+        },
+        variant === "primary" && !disabled ? elevation(1, theme, colors.accent) : null,
+      ]}
+    >
+      {loading ? (
+        <ActivityIndicator color={look.foreground} />
+      ) : (
+        <View
+          style={[styles.row, { gap: space.xs }, iconPlacement === "leading" && styles.reverse]}
+        >
+          <AppText
+            variant={large ? "button" : "subhead"}
+            numberOfLines={1}
+            style={{ color: look.foreground, fontFamily: theme.fonts.textSemibold }}
           >
-            <AppText
-              variant="button"
-              numberOfLines={1}
-              style={{ color: look.foreground }}
-            >
-              {label}
-            </AppText>
-            {icon ? <Feather name={icon} size={20} color={look.foreground} /> : null}
-          </View>
-        )}
-      </Pressable>
-    </Animated.View>
+            {label}
+          </AppText>
+          {Icon ? (
+            <Icon size={large ? 20 : 18} color={look.foreground} strokeWidth={2.2} />
+          ) : null}
+        </View>
+      )}
+    </PressableScale>
   );
 }
 
 const styles = StyleSheet.create({
-  base: {
-    minHeight: 56,
-    borderWidth: 1.5,
-    alignItems: "center",
-    justifyContent: "center",
-  },
+  surface: { alignItems: "center", justifyContent: "center" },
   row: { flexDirection: "row", alignItems: "center" },
-  rowReverse: { flexDirection: "row-reverse" },
+  reverse: { flexDirection: "row-reverse" },
 });

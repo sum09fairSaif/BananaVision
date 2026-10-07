@@ -1,32 +1,48 @@
-import { useMemo } from "react";
-import { View, ScrollView, Image } from "react-native";
+import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  View,
+  Pressable,
+  Animated,
+  StyleSheet,
+  useWindowDimensions,
+} from "react-native";
+import { Image } from "expo-image";
+import { LinearGradient } from "expo-linear-gradient";
+import { StatusBar } from "expo-status-bar";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Feather } from "@react-native-vector-icons/feather";
+import X from "lucide-react-native/icons/x";
+import ScanLine from "lucide-react-native/icons/scan-line";
+import Info from "lucide-react-native/icons/info";
+import BookOpen from "lucide-react-native/icons/book-open";
 import { useTheme } from "../theme/ThemeProvider";
-import Screen from "../components/Screen";
+import { useReducedMotion } from "../hooks/useReducedMotion";
 import AppText from "../components/AppText";
 import Button from "../components/Button";
 import IconButton from "../components/IconButton";
-import Notice from "../components/Notice";
-import GuideSection from "../components/GuideSection";
-import StageScale, { STAGE_LABELS } from "../components/StageScale";
+import GlassView from "../components/GlassView";
+import Card from "../components/Card";
+import GuideCarousel from "../components/GuideCarousel";
+import PrebioticPanel from "../components/PrebioticPanel";
+import NutritionFacts from "../components/NutritionFacts";
+import Reveal from "../components/Reveal";
+import RipenessSpectrum, { STAGE_NAMES } from "../components/RipenessSpectrum";
 
-// The six headings banana_content.py extracts, in the order a shopper cares about.
+// The headings banana_content.py extracts, ordered by what people ask first.
 const SECTIONS = [
-  { key: "benefits", title: "Benefits at this stage", icon: "heart" },
-  { key: "nutrients", title: "Essential nutrients", icon: "droplet" },
-  { key: "encouraged_for", title: "Encouraged for", icon: "thumbs-up" },
-  { key: "avoid_or_limit", title: "Who should limit or avoid", icon: "slash" },
-  { key: "risks", title: "Potential risks", icon: "alert-triangle" },
-  { key: "missing", title: "What's missing", icon: "minus-circle" },
+  { key: "benefits", title: "Benefits at this stage" },
+  { key: "nutrients", title: "Essential nutrients" },
+  { key: "encouraged_for", title: "Good for" },
+  { key: "avoid_or_limit", title: "Who should limit or avoid" },
+  { key: "risks", title: "Potential risks" },
+  { key: "missing", title: "What's missing" },
 ];
 const KNOWN_KEYS = new Set(SECTIONS.map((s) => s.key));
 
 const STAGE_SUMMARY = {
-  unripe: "Firm and starchy. Give it a few more days for sweetness.",
-  ripe: "Sweet, soft, and at its all-round best.",
-  overripe: "Very sweet and soft — perfect for baking or smoothies.",
-  rotten: "Past the point of eating. Please discard or compost it.",
+  unripe: "Firm and starchy, with the gentlest effect on blood sugar. Give it a few days for sweetness.",
+  ripe: "Sweet, soft, and easy to digest — the best all-round stage.",
+  overripe: "At its sweetest and softest. Ideal for baking, smoothies, or a quick energy boost.",
+  rotten: "Past the point of eating. Please discard it or add it to compost.",
 };
 
 const LOW_CONFIDENCE = 0.6;
@@ -36,241 +52,335 @@ function titleFromKey(key) {
   return words.charAt(0).toUpperCase() + words.slice(1);
 }
 
-function daysLeftCopy({ edible, days_remaining: days }) {
-  if (!edible) {
-    return { value: "0", caption: "Don't eat", a11y: "Days left: none. Don't eat." };
-  }
+function facts({ edible, confidence, days_remaining: days }) {
   const estimate = Math.max(0, Math.round(days?.estimate ?? 0));
   const low = Math.round(days?.low ?? estimate);
   const high = Math.round(days?.high ?? estimate);
-  if (estimate === 0) {
-    return { value: "<1", caption: "Best eaten today", a11y: "Less than a day left. Best eaten today." };
-  }
-  const caption = low !== high ? `Likely ${low}–${high} days` : "Estimated";
-  return { value: String(estimate), caption, a11y: `About ${estimate} days left. ${caption}.` };
-}
-
-function confidenceCopy(confidence) {
   const percent = Math.round(confidence * 100);
-  const level = confidence >= 0.85 ? "High" : confidence >= LOW_CONFIDENCE ? "Moderate" : "Low";
-  return {
-    value: `${percent}%`,
-    caption: level,
-    a11y: `Confidence ${percent} percent, ${level.toLowerCase()}.`,
-  };
+
+  const keeps = !edible
+    ? { value: "None", tone: "critical", a11y: "Shelf life: none." }
+    : estimate === 0
+      ? { value: "<1 day", a11y: "Keeps for less than a day. Best eaten today." }
+      : {
+          value: `${estimate} ${estimate === 1 ? "day" : "days"}`,
+          a11y: `Keeps for about ${estimate} days${low !== high ? `, likely ${low} to ${high}` : ""}.`,
+        };
+
+  return [
+    {
+      label: "Safe to eat",
+      value: edible ? "Yes" : "No",
+      tone: edible ? "positive" : "critical",
+      a11y: edible ? "Safe to eat." : "Not safe to eat.",
+    },
+    { label: "Keeps for", ...keeps },
+    { label: "Confidence", value: `${percent}%`, a11y: `Confidence ${percent} percent.` },
+  ];
 }
 
-export default function ResultScreen({ photo, result, onScanAgain, onRetake, onHome }) {
-  const { colors, space, radius } = useTheme();
+export default function ResultScreen({ photo, result, onScanAgain, onRetake, onHome, onSources }) {
+  const theme = useTheme();
+  const { colors, space, dark, motion } = theme;
   const insets = useSafeAreaInsets();
-  const { stage, edible, guide = {} } = result;
+  const { width, height } = useWindowDimensions();
+  const reduced = useReducedMotion();
+  const { stage, guide = {} } = result;
   const lowConfidence = result.confidence < LOW_CONFIDENCE;
+  // Older server builds send no sources or nutrition; those blocks then stay hidden.
+  const sourceCount = result.sources?.length ?? 0;
 
-  // Server-side sections the app doesn't know yet still render, so a new
-  // "### Storage tips" heading in banana_stages.md needs no app release.
+  const heroHeight = Math.min(width * 1.05, height * 0.48);
+  const collapseAt = heroHeight - insets.top - 56;
+  const scrollY = useRef(new Animated.Value(0)).current;
+  const settle = useRef(new Animated.Value(reduced ? 1 : 0)).current;
+  const [collapsed, setCollapsed] = useState(false);
+  const collapsedRef = useRef(false);
+  const [barHeight, setBarHeight] = useState(100);
+
+  useEffect(() => {
+    Animated.timing(settle, {
+      toValue: 1,
+      duration: reduced ? 0 : 900,
+      easing: motion.easeOut,
+      useNativeDriver: true,
+    }).start();
+  }, [settle, reduced, motion]);
+
+  // Sections the app doesn't know yet still render, so a new heading in
+  // banana_stages.md needs no app release. Rotten bananas lead with risks.
   const sections = useMemo(() => {
     const known = SECTIONS.filter((s) => guide[s.key]);
     const extra = Object.keys(guide)
       .filter((key) => !KNOWN_KEYS.has(key) && guide[key])
-      .map((key) => ({ key, title: titleFromKey(key), icon: "file-text" }));
-    const all = [...known, ...extra];
-    // For a rotten banana the risks matter most, so lead with them.
+      .map((key) => ({ key, title: titleFromKey(key) }));
+    const all = [...known, ...extra].map((s) => ({ ...s, body: guide[s.key] }));
     return stage === "rotten"
       ? [...all.filter((s) => s.key === "risks"), ...all.filter((s) => s.key !== "risks")]
       : all;
   }, [guide, stage]);
 
-  return (
-    <Screen edges={["top"]}>
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "space-between",
-          paddingHorizontal: space.lg,
-          paddingVertical: space.xs,
-        }}
-      >
-        <IconButton icon="home" label="Home" onPress={onHome} />
-        <AppText variant="headline">Your result</AppText>
-        <View style={{ width: 48 }} />
-      </View>
+  const onScroll = Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], {
+    useNativeDriver: true,
+    listener: (event) => {
+      const next = event.nativeEvent.contentOffset.y > collapseAt - 20;
+      if (next !== collapsedRef.current) {
+        collapsedRef.current = next;
+        setCollapsed(next);
+      }
+    },
+  });
 
-      <ScrollView
-        contentContainerStyle={{
-          paddingHorizontal: space.lg,
-          paddingTop: space.xs,
-          paddingBottom: space.xxl,
-          gap: space.lg,
-        }}
+  const heroTranslate = scrollY.interpolate({
+    inputRange: [0, heroHeight],
+    outputRange: [0, heroHeight * 0.35],
+    extrapolate: "clamp",
+  });
+  const heroScale = settle.interpolate({ inputRange: [0, 1], outputRange: [1.08, 1] });
+  const headerOpacity = scrollY.interpolate({
+    inputRange: [collapseAt - 40, collapseAt],
+    outputRange: [0, 1],
+    extrapolate: "clamp",
+  });
+  const chromeWash = dark ? "rgba(10, 20, 19, 0.78)" : "rgba(243, 246, 242, 0.82)";
+
+  return (
+    <View style={{ flex: 1, backgroundColor: colors.canvas }}>
+      <StatusBar style={collapsed ? (dark ? "light" : "dark") : "light"} />
+
+      <Animated.ScrollView
+        onScroll={onScroll}
+        scrollEventThrottle={16}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: barHeight + space.xl }}
       >
-        <View
-          style={{
-            backgroundColor: colors.surface,
-            borderRadius: radius.xl,
-            borderWidth: 1,
-            borderColor: colors.border,
-            overflow: "hidden",
-          }}
-        >
-          <Image
-            source={{ uri: photo.uri }}
-            resizeMode="cover"
-            accessibilityLabel="The photo you scanned"
-            style={{ width: "100%", aspectRatio: 4 / 3, backgroundColor: colors.surfaceSunken }}
+        <View style={{ height: heroHeight, overflow: "hidden", backgroundColor: colors.sunken }}>
+          <Animated.View
+            style={[
+              StyleSheet.absoluteFill,
+              { transform: [{ translateY: heroTranslate }, { scale: heroScale }] },
+            ]}
+          >
+            <Image
+              source={{ uri: photo.uri }}
+              style={StyleSheet.absoluteFill}
+              contentFit="cover"
+              transition={reduced ? 0 : 300}
+              accessibilityLabel="The photo you scanned"
+            />
+          </Animated.View>
+          <LinearGradient
+            colors={["rgba(0,0,0,0.38)", "rgba(0,0,0,0)"]}
+            style={{ position: "absolute", top: 0, left: 0, right: 0, height: insets.top + 96 }}
           />
-          <View style={{ padding: space.xl, gap: space.md }}>
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "space-between",
-                flexWrap: "wrap",
-                gap: space.xs,
-              }}
-            >
-              <AppText variant="overline" tone="textSecondary">
+          <LinearGradient
+            colors={[colors.canvasClear, colors.canvas]}
+            style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: 140 }}
+          />
+        </View>
+
+        <View style={{ marginTop: -space.xxxl, paddingHorizontal: space.xl }}>
+          <Reveal>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: space.xs }}>
+              <View
+                style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: colors.stage[stage] }}
+              />
+              <AppText variant="subhead" tone="ink2">
                 Ripeness stage
               </AppText>
-              <EdibleBadge edible={edible} />
             </View>
-            <View style={{ gap: space.xxs }}>
-              <AppText variant="display" accessibilityRole="header">
-                {STAGE_LABELS[stage]}
-              </AppText>
-              <AppText variant="body" tone="textSecondary">
-                {STAGE_SUMMARY[stage]}
-              </AppText>
-            </View>
-            <StageScale stage={stage} />
-          </View>
+            <AppText
+              variant="hero"
+              accessibilityRole="header"
+              style={{ fontSize: 54, lineHeight: 60, letterSpacing: -1.4, marginTop: space.xxs }}
+            >
+              {STAGE_NAMES[stage]}
+            </AppText>
+            <AppText variant="body" tone="ink2" style={{ marginTop: space.xxs }}>
+              {STAGE_SUMMARY[stage]}
+            </AppText>
+          </Reveal>
+
+          <Reveal delay={90} style={{ marginTop: space.xl }}>
+            <RipenessSpectrum stage={stage} daysEstimate={result.days_remaining?.estimate} />
+          </Reveal>
+
+          <Reveal delay={170} style={{ marginTop: space.xl }}>
+            <FactStrip items={facts(result)} />
+          </Reveal>
+
+          {lowConfidence ? (
+            <Reveal delay={220} style={{ marginTop: space.md }}>
+              <LowConfidenceNote onRetake={onRetake} />
+            </Reveal>
+          ) : null}
+
+          {/* The heart of the app: how much prebiotic this particular stage carries. */}
+          <Reveal delay={240} style={{ marginTop: space.xxl }}>
+            <PrebioticPanel data={result.prebiotics} explainer={result.nutrition?.explainer} />
+          </Reveal>
+
+          <Reveal delay={260} style={{ marginTop: space.xxxl }}>
+            <AppText variant="title" accessibilityRole="header">
+              What to know
+            </AppText>
+            <AppText variant="callout" tone="ink3" style={{ marginTop: 2 }}>
+              Swipe through {sections.length} {sections.length === 1 ? "section" : "sections"} from the
+              stage guide
+            </AppText>
+          </Reveal>
         </View>
 
-        <View style={{ flexDirection: "row", gap: space.sm }}>
-          <StatTile
-            icon="calendar"
-            label="Days left"
-            tone={edible ? "text" : "danger"}
-            {...daysLeftCopy(result)}
-          />
-          <StatTile icon="target" label="Confidence" {...confidenceCopy(result.confidence)} />
-        </View>
+        {/* Full-bleed so bubbles float in from the screen edges. */}
+        <Reveal delay={300} style={{ marginTop: space.xs }}>
+          <GuideCarousel sections={sections} />
+        </Reveal>
 
-        {lowConfidence ? (
-          <Notice
-            tone="warning"
-            title="Not fully sure about this one"
-            message="For a sharper read, retake the photo in bright, even light with the whole banana in frame."
-            action={
+        <View style={{ paddingHorizontal: space.xl }}>
+          {result.nutrition?.baseline ? (
+            <Reveal delay={340} style={{ marginTop: space.xxxl }}>
+              <AppText variant="title" accessibilityRole="header">
+                Nutrition facts
+              </AppText>
+              <AppText variant="callout" tone="ink3" style={{ marginTop: 2, marginBottom: space.md }}>
+                What stays the same at every stage
+              </AppText>
+              <NutritionFacts data={result.nutrition} />
+            </Reveal>
+          ) : null}
+
+          {sourceCount ? (
+            <Reveal delay={360} style={{ marginTop: space.lg }}>
               <Button
-                label="Retake photo"
-                icon="camera"
+                label={`View all ${sourceCount} sources`}
                 variant="secondary"
-                onPress={onRetake}
-                style={{ alignSelf: "flex-start" }}
+                tone="neutral"
+                size="medium"
+                icon={BookOpen}
+                iconPlacement="leading"
+                onPress={() => onSources(result.sources)}
+                accessibilityHint="Every reference behind these figures"
               />
-            }
-          />
-        ) : null}
+            </Reveal>
+          ) : null}
 
-        <View style={{ gap: space.sm, marginTop: space.xs }}>
-          <AppText variant="title2" accessibilityRole="header">
-            What to know
-          </AppText>
-          {sections.map((section, i) => (
-            <GuideSection
-              key={section.key}
-              title={section.title}
-              icon={section.icon}
-              body={guide[section.key]}
-              defaultOpen={i === 0}
-            />
-          ))}
-        </View>
-
-        <View style={{ flexDirection: "row", gap: space.xs }}>
-          <Feather name="info" size={14} color={colors.textTertiary} style={{ marginTop: 2 }} />
-          <AppText variant="footnote" tone="textTertiary" style={{ flex: 1 }}>
-            General educational guidance only — not medical, dietary, or food-safety
-            advice. Bracketed numbers cite sources in the BananaVision stage guide.
+          <AppText variant="footnote" tone="ink3" style={{ marginTop: space.lg }}>
+            General educational guidance, not medical, dietary, or food-safety advice.
+            Numbers in brackets refer to the numbered sources.
           </AppText>
         </View>
-      </ScrollView>
+      </Animated.ScrollView>
+
+      {/* Compact title bar that fades in once the photo scrolls away. */}
+      <Animated.View
+        pointerEvents="none"
+        style={{ position: "absolute", top: 0, left: 0, right: 0, height: insets.top + 60, opacity: headerOpacity }}
+      >
+        <GlassView
+          tint={dark ? "dark" : "light"}
+          wash={chromeWash}
+          style={{
+            flex: 1,
+            borderWidth: 0,
+            borderBottomWidth: StyleSheet.hairlineWidth,
+            borderColor: colors.hairline,
+            alignItems: "center",
+            justifyContent: "flex-end",
+            paddingBottom: 18,
+          }}
+        >
+          <AppText variant="headline">{STAGE_NAMES[stage]}</AppText>
+        </GlassView>
+      </Animated.View>
+
+      <View style={{ position: "absolute", top: insets.top + space.xs, left: space.md }}>
+        <IconButton icon={X} label="Done" variant={collapsed ? "plain" : "glass"} onPress={onHome} />
+      </View>
 
       <View
-        style={{
-          paddingHorizontal: space.lg,
-          paddingTop: space.sm,
-          paddingBottom: insets.bottom + space.sm,
-          borderTopWidth: 1,
-          borderTopColor: colors.border,
-          backgroundColor: colors.background,
-        }}
+        onLayout={(event) => setBarHeight(event.nativeEvent.layout.height)}
+        style={{ position: "absolute", left: 0, right: 0, bottom: 0 }}
       >
-        <Button label="Scan another banana" icon="camera" onPress={onScanAgain} />
+        <GlassView
+          tint={dark ? "dark" : "light"}
+          wash={chromeWash}
+          style={{
+            borderWidth: 0,
+            borderTopWidth: StyleSheet.hairlineWidth,
+            borderColor: colors.hairline,
+            paddingHorizontal: space.xl,
+            paddingTop: space.sm,
+            paddingBottom: insets.bottom + space.sm,
+          }}
+        >
+          <Button label="Scan another banana" icon={ScanLine} iconPlacement="leading" onPress={onScanAgain} />
+        </GlassView>
       </View>
-    </Screen>
-  );
-}
-
-function EdibleBadge({ edible }) {
-  const { colors, space, radius } = useTheme();
-  return (
-    <View
-      style={{
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 6,
-        paddingHorizontal: space.sm,
-        paddingVertical: 6,
-        borderRadius: radius.pill,
-        backgroundColor: edible ? colors.successSoft : colors.dangerSoft,
-      }}
-    >
-      <Feather
-        name={edible ? "check-circle" : "x-octagon"}
-        size={16}
-        color={edible ? colors.success : colors.danger}
-      />
-      <AppText
-        variant="footnote"
-        tone={edible ? "success" : "danger"}
-        style={{ fontFamily: "Nunito_800ExtraBold" }}
-      >
-        {edible ? "Good to eat" : "Don't eat"}
-      </AppText>
     </View>
   );
 }
 
-function StatTile({ icon, label, value, caption, a11y, tone = "text" }) {
-  const { colors, space, radius } = useTheme();
+function FactStrip({ items }) {
+  const { colors, space } = useTheme();
+  return (
+    <Card>
+      <View style={{ flexDirection: "row" }}>
+        {items.map((item, i) => (
+          <View
+            key={item.label}
+            accessible
+            accessibilityLabel={item.a11y}
+            style={{
+              flex: 1,
+              alignItems: "center",
+              gap: 2,
+              paddingVertical: space.md,
+              paddingHorizontal: space.xs,
+              borderLeftWidth: i === 0 ? 0 : StyleSheet.hairlineWidth,
+              borderLeftColor: colors.separator,
+            }}
+          >
+            <AppText variant="metric" tone={item.tone ?? "ink"} numberOfLines={1} adjustsFontSizeToFit>
+              {item.value}
+            </AppText>
+            <AppText variant="caption" tone="ink3" numberOfLines={1}>
+              {item.label}
+            </AppText>
+          </View>
+        ))}
+      </View>
+    </Card>
+  );
+}
+
+function LowConfidenceNote({ onRetake }) {
+  const { colors, fonts, space, radius } = useTheme();
   return (
     <View
-      accessible
-      accessibilityLabel={a11y}
       style={{
-        flex: 1,
-        gap: space.xxs,
+        flexDirection: "row",
+        gap: space.sm,
         padding: space.md,
-        borderRadius: radius.lg,
-        borderWidth: 1,
-        borderColor: colors.border,
-        backgroundColor: colors.surface,
+        borderRadius: radius.md,
+        backgroundColor: colors.cautionSoft,
       }}
     >
-      <View style={{ flexDirection: "row", alignItems: "center", gap: space.xs }}>
-        <Feather name={icon} size={16} color={colors.textSecondary} />
-        <AppText variant="footnote" tone="textSecondary">
-          {label}
+      <Info size={18} color={colors.caution} strokeWidth={2.2} style={{ marginTop: 2 }} />
+      <View style={{ flex: 1 }}>
+        <AppText variant="callout">
+          We're not fully sure about this one. A closer photo in soft, even light helps.
         </AppText>
+        <Pressable
+          onPress={onRetake}
+          hitSlop={10}
+          accessibilityRole="button"
+          style={{ alignSelf: "flex-start", marginTop: space.xs }}
+        >
+          <AppText variant="subhead" tone="caution" style={{ fontFamily: fonts.textSemibold }}>
+            Retake photo
+          </AppText>
+        </Pressable>
       </View>
-      <AppText variant="title1" tone={tone} numberOfLines={1}>
-        {value}
-      </AppText>
-      <AppText variant="footnote" tone="textTertiary">
-        {caption}
-      </AppText>
     </View>
   );
 }

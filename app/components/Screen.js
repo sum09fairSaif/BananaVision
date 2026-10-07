@@ -4,13 +4,11 @@ import { StatusBar } from "expo-status-bar";
 import { useTheme } from "../theme/ThemeProvider";
 
 // Themed, safe-area-aware page container used by every non-camera screen.
-export default function Screen({ children, edges = ["top", "bottom"], style }) {
+// transparent=true lets a background drawn behind the screen show through.
+export default function Screen({ children, edges = ["top", "bottom"], style, transparent = false }) {
   const { colors, dark } = useTheme();
   return (
-    <SafeAreaView
-      edges={edges}
-      style={[styles.fill, { backgroundColor: colors.background }]}
-    >
+    <SafeAreaView edges={edges} style={[styles.fill, { backgroundColor: transparent ? "transparent" : colors.canvas }]}>
       <StatusBar style={dark ? "light" : "dark"} />
       <View style={[styles.fill, style]}>{children}</View>
     </SafeAreaView>

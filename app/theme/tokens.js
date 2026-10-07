@@ -1,97 +1,146 @@
-// Design tokens. Every color, size, and duration in the app comes from here,
-// so the light and dark palettes can never drift apart.
-import { Easing } from "react-native";
+// Design tokens: the single source for color, type, space, shape, depth, and motion.
+// Palette "Lagoon": deep blue-green ink on a soft green-grey canvas, pastel green
+// and mist tints for surfaces, turquoise kept for moments of activity (scanning).
+// Every text color is checked against its background for WCAG 2.2 AA (≥ 4.5:1).
+import { Easing, Platform } from "react-native";
 
-// Text colors are checked against their backgrounds for WCAG 2.2 AA (4.5:1).
 export const lightColors = {
-  background: "#F2F8F6",
-  surface: "#FFFFFF",
-  surfaceSunken: "#E4F2EE",
-  border: "#D3E6E1",
-  borderStrong: "#A9CEC6",
+  canvas: "#F3F6F2",
+  canvasClear: "rgba(243, 246, 242, 0)",
+  heroFrom: "#DFF1E6",
+  heroTo: "#D1EBE7",
+  elevated: "#FFFFFF",
+  sunken: "#E8EFEA",
+  sunkenPressed: "#DCE6E0",
+  mist: "#DDEFEC",
+  pastel: "#D5EDDD",
+  onPastel: "#1D4A3C",
+  hairline: "rgba(16, 42, 40, 0.09)",
+  separator: "rgba(16, 42, 40, 0.16)",
 
-  text: "#0B2B2A",
-  textSecondary: "#46645F",
-  textTertiary: "#58726E",
+  ink: "#102A28",
+  ink2: "#4B605C",
+  ink3: "#586C68",
 
-  primary: "#0E7C72",
-  primaryPressed: "#0A645C",
-  onPrimary: "#FFFFFF",
-  primarySoft: "#D3F1EA",
-  onPrimarySoft: "#0A5F57",
+  accent: "#0F6B63",
+  accentPressed: "#0B5751",
+  onAccent: "#FFFFFF",
+  accentSoft: "#D4ECE7",
+  onAccentSoft: "#0B544D",
+  turquoise: "#2FBFB1",
 
-  turquoise: "#3CC6BA",
-  mint: "#C9EEDA",
-  mintDeep: "#8FD9B6",
+  positive: "#1F6E47",
+  positiveSoft: "#DCEFE3",
+  caution: "#8A5B00",
+  cautionSoft: "#F8EBCD",
+  critical: "#A8321F",
+  criticalSoft: "#F8E3DE",
 
-  success: "#156B3F",
-  successSoft: "#DDF4E6",
-  warning: "#8A5A00",
-  warningSoft: "#FCF1D6",
-  danger: "#B3261E",
-  dangerSoft: "#FBE7E5",
+  shadow: "#0C2A26",
 
-  scrim: "rgba(4, 22, 21, 0.55)",
-  shadow: "#0B3B36",
-
-  // Ripeness is always shown with a label too, so these never carry meaning alone.
+  // Ripeness hues, tuned to sit naturally beside the greens. Always paired
+  // with a text label, so color never carries meaning on its own.
   stage: {
-    unripe: "#5E9E3A",
-    ripe: "#E9B823",
-    overripe: "#B97A22",
-    rotten: "#6E4B2F",
+    unripe: "#86A94F",
+    ripe: "#EDC23A",
+    overripe: "#CF8D32",
+    rotten: "#6A4C34",
   },
 };
 
 export const darkColors = {
-  background: "#061716",
-  surface: "#0D2322",
-  surfaceSunken: "#0A1D1C",
-  border: "#1B3A38",
-  borderStrong: "#2C5652",
+  canvas: "#0A1413",
+  canvasClear: "rgba(10, 20, 19, 0)",
+  heroFrom: "#15322C",
+  heroTo: "#0F2729",
+  elevated: "#121E1C",
+  sunken: "#172523",
+  sunkenPressed: "#1E2F2C",
+  mist: "#12302D",
+  pastel: "#173A2E",
+  onPastel: "#BFE8D2",
+  hairline: "rgba(226, 244, 239, 0.08)",
+  separator: "rgba(226, 244, 239, 0.16)",
 
-  text: "#E3F5F1",
-  textSecondary: "#A3C7C0",
-  textTertiary: "#7FA39C",
+  ink: "#E6F1EE",
+  ink2: "#A6BAB5",
+  ink3: "#81958F",
 
-  primary: "#4FD1C1",
-  primaryPressed: "#3BB8A9",
-  onPrimary: "#032B27",
-  primarySoft: "#10302E",
-  onPrimarySoft: "#7FE3D6",
+  accent: "#5BD3C1",
+  accentPressed: "#48BFAE",
+  onAccent: "#062320",
+  accentSoft: "#143532",
+  onAccentSoft: "#8FE6D8",
+  turquoise: "#3DD6C6",
 
-  turquoise: "#2FA89E",
-  mint: "#16392F",
-  mintDeep: "#2A6B55",
+  positive: "#7DD9A4",
+  positiveSoft: "#12291D",
+  caution: "#F0C36A",
+  cautionSoft: "#2A2211",
+  critical: "#FF9580",
+  criticalSoft: "#2E1714",
 
-  success: "#6FD69A",
-  successSoft: "#0F2A1C",
-  warning: "#F2C46B",
-  warningSoft: "#2A2210",
-  danger: "#FF8A80",
-  dangerSoft: "#2E1413",
-
-  scrim: "rgba(0, 0, 0, 0.6)",
   shadow: "#000000",
 
   stage: {
-    unripe: "#86C95E",
-    ripe: "#F2C94C",
-    overripe: "#D9A04A",
-    rotten: "#A7795A",
+    unripe: "#9CC466",
+    ripe: "#F2CB52",
+    overripe: "#DDA04E",
+    rotten: "#A57C5B",
   },
 };
 
-// Camera screens stay dark in both themes so the viewfinder reads clearly.
-export const cameraChrome = {
-  scrim: "rgba(0, 0, 0, 0.45)",
-  control: "rgba(0, 0, 0, 0.42)",
-  controlPressed: "rgba(0, 0, 0, 0.62)",
-  controlBorder: "rgba(255, 255, 255, 0.2)",
-  foreground: "#FFFFFF",
-  accent: "#7FE3D6",
-  warning: "#F2C46B",
-  onWarning: "#2A2210",
+// Fraunces (a soft, warm serif) carries headlines and numbers; DM Sans carries
+// everything you read quickly. The pairing reads editorial rather than "app template".
+export const fonts = {
+  display: "Fraunces_600SemiBold",
+  displayItalic: "Fraunces_600SemiBold_Italic",
+  text: "DMSans_400Regular",
+  textMedium: "DMSans_500Medium",
+  textSemibold: "DMSans_600SemiBold",
+};
+
+export const type = {
+  hero: { fontFamily: fonts.display, fontSize: 44, lineHeight: 50, letterSpacing: -1.1 },
+  display: { fontFamily: fonts.display, fontSize: 34, lineHeight: 40, letterSpacing: -0.7 },
+  title: { fontFamily: fonts.display, fontSize: 26, lineHeight: 32, letterSpacing: -0.4 },
+  metric: {
+    fontFamily: fonts.display,
+    fontSize: 28,
+    lineHeight: 32,
+    letterSpacing: -0.5,
+    fontVariant: ["tabular-nums"],
+  },
+  headline: { fontFamily: fonts.textSemibold, fontSize: 17, lineHeight: 24, letterSpacing: -0.2 },
+  body: { fontFamily: fonts.text, fontSize: 17, lineHeight: 26, letterSpacing: -0.1 },
+  subhead: { fontFamily: fonts.textMedium, fontSize: 15, lineHeight: 22, letterSpacing: -0.1 },
+  callout: { fontFamily: fonts.text, fontSize: 15, lineHeight: 22 },
+  footnote: { fontFamily: fonts.text, fontSize: 13, lineHeight: 18 },
+  caption: { fontFamily: fonts.textMedium, fontSize: 12, lineHeight: 16, letterSpacing: 0.1 },
+  eyebrow: {
+    fontFamily: fonts.textSemibold,
+    fontSize: 12,
+    lineHeight: 16,
+    letterSpacing: 0.9,
+    textTransform: "uppercase",
+  },
+  button: { fontFamily: fonts.textSemibold, fontSize: 17, lineHeight: 22, letterSpacing: -0.2 },
+};
+
+// Large type scales less with the OS text-size setting so it can't crowd out actions.
+export const fontScaleCap = {
+  hero: 1.25,
+  display: 1.3,
+  title: 1.4,
+  metric: 1.3,
+  headline: 1.8,
+  body: 2,
+  subhead: 2,
+  callout: 2,
+  footnote: 2,
+  caption: 1.8,
+  eyebrow: 1.6,
+  button: 1.5,
 };
 
 // 4-point grid.
@@ -103,57 +152,58 @@ export const space = {
   lg: 20,
   xl: 24,
   xxl: 32,
-  xxxl: 40,
-  huge: 56,
+  xxxl: 44,
+  huge: 64,
 };
 
 export const radius = {
   sm: 10,
   md: 14,
-  lg: 20,
-  xl: 28,
+  button: 18,
+  card: 24,
+  sheet: 32,
   pill: 999,
-};
-
-// Fixed point sizes; the OS text-size setting scales them up to fontScaleCap.
-export const type = {
-  display: { fontFamily: "Baloo2_800ExtraBold", fontSize: 40, lineHeight: 46 },
-  title1: { fontFamily: "Baloo2_700Bold", fontSize: 30, lineHeight: 36 },
-  title2: { fontFamily: "Nunito_800ExtraBold", fontSize: 22, lineHeight: 28 },
-  headline: { fontFamily: "Nunito_700Bold", fontSize: 17, lineHeight: 24 },
-  body: { fontFamily: "Nunito_500Medium", fontSize: 16, lineHeight: 24 },
-  callout: { fontFamily: "Nunito_600SemiBold", fontSize: 15, lineHeight: 22 },
-  footnote: { fontFamily: "Nunito_600SemiBold", fontSize: 13, lineHeight: 18 },
-  overline: {
-    fontFamily: "Nunito_800ExtraBold",
-    fontSize: 12,
-    lineHeight: 16,
-    letterSpacing: 1.2,
-    textTransform: "uppercase",
-  },
-  button: { fontFamily: "Nunito_800ExtraBold", fontSize: 16, lineHeight: 20 },
-};
-
-// Large display text scales less so it can't push buttons off small screens.
-export const fontScaleCap = {
-  display: 1.3,
-  title1: 1.4,
-  title2: 1.5,
-  headline: 1.8,
-  body: 2,
-  callout: 2,
-  footnote: 2,
-  overline: 1.6,
-  button: 1.6,
 };
 
 export const motion = {
   fast: 160,
-  base: 240,
-  slow: 420,
-  easeOut: Easing.bezier(0.2, 0, 0, 1),
-  easeInOut: Easing.bezier(0.4, 0, 0.2, 1),
+  base: 260,
+  slow: 480,
+  // Expo-out: quick start, long gentle settle — how physical things come to rest.
+  easeOut: Easing.bezier(0.16, 1, 0.3, 1),
+  easeInOut: Easing.bezier(0.65, 0, 0.35, 1),
 };
 
-// Minimum touch target: Apple asks for 44pt, Material for 48dp — we use the larger.
+// Camera and photo overlays stay dark in both themes.
+export const overlay = {
+  foreground: "#FFFFFF",
+  foregroundMuted: "rgba(255, 255, 255, 0.78)",
+  scrim: "rgba(6, 14, 13, 0.32)",
+  frame: "rgba(255, 255, 255, 0.92)",
+  accent: "#7FE6D8",
+  caution: "#F4CD78",
+};
+
 export const HIT_TARGET = 48;
+
+// Soft, low, tinted shadows in light mode. Dark mode can't show shadows, so
+// depth comes from a hairline edge instead.
+export function elevation(level, { dark, colors }, tint) {
+  if (dark) {
+    return level === 0 ? null : { borderWidth: 1, borderColor: colors.hairline };
+  }
+  const presets = {
+    1: { opacity: 0.08, radius: 10, y: 3, android: 1 },
+    2: { opacity: 0.1, radius: 24, y: 10, android: 3 },
+  };
+  const p = presets[level];
+  if (!p) return null;
+  return {
+    shadowColor: tint ?? colors.shadow,
+    shadowOpacity: tint ? 0.24 : p.opacity,
+    shadowRadius: p.radius,
+    shadowOffset: { width: 0, height: p.y },
+    // Android shadows are always grey; skip them for tinted (colored) shadows.
+    elevation: Platform.OS === "android" && tint ? 0 : p.android,
+  };
+}

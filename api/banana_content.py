@@ -86,6 +86,43 @@ def load_stage_guide(path):
 
 
 
+def load_sources(path):
+    """
+    Parse '## Sources and references' into [{"id": 1, "text": "...", "url": "..."}].
+    Entries start with '[n]' and run until the next '[n]' or heading, so a reference
+    can wrap over several lines. The app shows these so every figure is checkable.
+    """
+    text = _read_text(path)
+    body = re.split(r"(?mi)^##\s*Sources and references\s*$", text)
+    if len(body) < 2:
+        return []
+
+    sources, current = [], None
+
+    def store():
+        if current:
+            joined = " ".join(current["lines"]).strip()
+            url = re.search(r"https?://\S+", joined)
+            sources.append({
+                "id": current["id"],
+                "text": re.sub(r"\s*https?://\S+", "", joined).strip(),
+                "url": url.group(0).rstrip(".,") if url else None,
+            })
+
+    for line in body[1].splitlines():
+        start = re.match(r"\s*\[(\d+)\]\s*(.*)", line)
+        if start:
+            store()
+            current = {"id": int(start.group(1)), "lines": [start.group(2)]}
+        elif current and line.strip():
+            current["lines"].append(line.strip())
+        elif current:
+            store()
+            current = None
+    store()
+    return sorted(sources, key=lambda s: s["id"])
+
+
 def missing_pieces(guide, stages=STAGES, fields=FIELDS):
     """Every stage/field the document failed to supply. Empty list means complete."""
     gaps = []
@@ -107,5 +144,6 @@ if __name__ == "__main__":
     print("Stages found :", list(guide))
     print("Fields/stage :", list(guide.get("ripe", {})))
     print("Gaps         :", gaps or "none")
+    print("Sources      :", len(load_sources(doc)))
 
 

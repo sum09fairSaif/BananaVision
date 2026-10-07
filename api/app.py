@@ -10,7 +10,7 @@ from PIL import Image, ImageOps, UnidentifiedImageError
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from ai_edge_litert.interpreter import Interpreter   # the light LiteRT runtime
-from banana_content import load_stage_guide          # parses banana_stages.md
+from banana_content import load_stage_guide, load_sources   # parses banana_stages.md
 
 MAX_BYTES = 8 * 1024 * 1024   # reject uploads bigger than 8 MB
 
@@ -34,6 +34,11 @@ DAYS = CONFIG["days_by_stage"]
 IMG_SIZE = tuple(CONFIG["img_size"])
 
 GUIDE = load_stage_guide("banana_stages.md")   # {stage: {nutrients, benefits, ...}}
+SOURCES = load_sources("banana_stages.md")     # [{id, text, url}] behind every figure
+
+# Figures (prebiotic content per stage, USDA baseline) live in their own file so the
+# app can lay them out as numbers instead of prose. Source ids match SOURCES above.
+NUTRITION = json.load(open("banana_nutrition.json", encoding="utf-8"))
 
 # --- banana gate: a stock ImageNet MobileNetV2 that answers "is this a banana at all?" ---
 # The ripeness model only knows four stages, so it files *any* photo under one of them
@@ -92,7 +97,22 @@ def analyze(pil_image):
                             "low": round(min(considered), 1),
                             "high": round(max(considered), 1)},
         "guide": GUIDE.get(stage, {}),   # six prose fields from banana_stages.md
+        "prebiotics": NUTRITION["stages"].get(stage, {}),
+        "nutrition": {
+            "basis": NUTRITION["basis"],
+            "medium_banana_g": NUTRITION["medium_banana_g"],
+            "fiber_daily_value_g": NUTRITION["fiber_daily_value_g"],
+            "explainer": NUTRITION["prebiotic_explainer"],
+            "baseline": NUTRITION["baseline"],
+        },
+        "sources": SOURCES,
     }
+
+
+@app.get("/sources")
+def sources():
+    """Every reference behind the figures and prose, for the app's Sources screen."""
+    return {"sources": SOURCES}
 
 
 @app.get("/health")

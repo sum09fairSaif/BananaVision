@@ -741,7 +741,7 @@ This is the spine of the MVP. The model lives on a small web server on the inter
 
 **Do the following:**
 1. Create the three server files below — `app.py`, `requirements.txt`, and `Dockerfile` — together in your `api/` folder.
-2. Put four more files in that same folder: `banana_model.tflite` and `banana_config.json` (from Part 7), plus `banana_stages.md` and `banana_content.py` (the content document and its parser). Those are everything the server needs. (The heavy `.keras` file stays on your training machine.)
+2. Put these files in that same folder: `banana_model.tflite` and `banana_config.json` (from Part 7); `banana_stages.md` and `banana_content.py` (the content document and its parser); `banana_nutrition.json` (the per-stage prebiotic figures and the USDA baseline, with source ids pointing back into `banana_stages.md`); and `imagenet_gate.tflite` (the stock ImageNet model that rejects photos that are not bananas). Those are everything the server needs. (The heavy `.keras` file stays on your training machine.)
 
 **Why the structure it has:**
 - **Load the model once at module top, not per request.** Loading takes time; doing it on every request would make the app crawl. Load once at startup, reuse for every call.

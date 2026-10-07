@@ -11,7 +11,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#D3F1EA",
+        "backgroundColor": "#E3F3E9",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
@@ -22,7 +22,6 @@
     },
     "plugins": [
       "expo-font",
-      "@react-native-vector-icons/feather",
       [
         "expo-camera",
         {
@@ -34,6 +33,20 @@
         "expo-image-picker",
         {
           "photosPermission": "BananaVision lets you choose a banana photo from your library to check how ripe it is."
+        }
+      ],
+      "expo-image",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#F3F6F2",
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 132,
+          "resizeMode": "contain",
+          "dark": {
+            "backgroundColor": "#0A1413",
+            "image": "./assets/splash-icon-dark.png"
+          }
         }
       ]
     ]

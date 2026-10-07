@@ -1,6 +1,8 @@
 // Talks to the BananaVision backend (api/app.py on Render).
 import * as Network from "expo-network";
 import { ImageManipulator, SaveFormat } from "expo-image-manipulator";
+import { File } from "expo-file-system";
+import { withReferenceContent } from "../content";
 
 export const API_BASE = "https://bananavision-api.onrender.com";
 
@@ -79,10 +81,12 @@ async function prepareImage({ uri, width, height }) {
  * Rejects with an AnalyzeError whose `kind` is one of ErrorKind.
  *
  * @param photo   { uri, width?, height? } from the camera or photo library
- * @param signal  optional AbortSignal so the user can cancel
- * @param onSlow  called once if the request is still running after a few seconds
+ * @param signal   optional AbortSignal so the user can cancel
+ * @param onSlow   called once if the request is still running after a few seconds
+ * @param onPhase  called with "preparing" (resizing on device) then "analyzing"
+ *                 (uploaded, waiting on the server) — real progress, not a guess
  */
-export async function analyzePhoto(photo, { signal, onSlow } = {}) {
+export async function analyzePhoto(photo, { signal, onSlow, onPhase } = {}) {
   if (!(await isOnline())) throw new AnalyzeError(ErrorKind.OFFLINE);
 
   const controller = new AbortController();
@@ -97,6 +101,7 @@ export async function analyzePhoto(photo, { signal, onSlow } = {}) {
 
   // Classifies a failure that happened while the request was in flight.
   async function transportError(cause) {
+    if (__DEV__) console.warn("[BananaVision] upload failed:", cause);
     if (signal?.aborted) return new AnalyzeError(ErrorKind.CANCELLED, cause);
     if (timedOut) return new AnalyzeError(ErrorKind.TIMEOUT, cause);
     const online = await isOnline();
@@ -105,6 +110,7 @@ export async function analyzePhoto(photo, { signal, onSlow } = {}) {
 
   try {
     let uri;
+    onPhase?.("preparing");
     try {
       uri = await prepareImage(photo);
     } catch (cause) {
@@ -112,10 +118,14 @@ export async function analyzePhoto(photo, { signal, onSlow } = {}) {
     }
     if (signal?.aborted) throw new AnalyzeError(ErrorKind.CANCELLED);
 
+    // SDK 57's global fetch (expo/fetch) only accepts Blob-like form parts;
+    // React Native's { uri, name, type } objects throw before anything is sent.
+    // expo-file-system's File implements Blob (name, type, bytes), so it works.
     const form = new FormData();
-    form.append("file", { uri, name: "banana.jpg", type: "image/jpeg" });
+    form.append("file", new File(uri));
 
     let response;
+    onPhase?.("analyzing");
     try {
       response = await fetch(`${API_BASE}/analyze`, {
         method: "POST",
@@ -141,7 +151,9 @@ export async function analyzePhoto(photo, { signal, onSlow } = {}) {
 
     if (data.recognized === false) throw new AnalyzeError(ErrorKind.NOT_RECOGNIZED);
     if (!STAGES.includes(data.stage)) throw new AnalyzeError(ErrorKind.SERVER);
-    return data;
+    // Prebiotic figures, the nutrition baseline and the sources are the same for
+    // every scan, so the app supplies them when the deployed server predates them.
+    return withReferenceContent(data);
   } finally {
     clearTimeout(timeout);
     clearTimeout(slow);

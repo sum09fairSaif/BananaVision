@@ -1,30 +1,33 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { View, BackHandler, Platform } from "react-native";
+import { View, BackHandler } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import * as NativeSplash from "expo-splash-screen";
 import { useFonts } from "expo-font";
-import {
-  Nunito_500Medium,
-  Nunito_600SemiBold,
-  Nunito_700Bold,
-  Nunito_800ExtraBold,
-} from "@expo-google-fonts/nunito";
-import { Baloo2_700Bold, Baloo2_800ExtraBold } from "@expo-google-fonts/baloo-2";
 import { ThemeProvider, useTheme } from "./theme/ThemeProvider";
+import { fontAssets } from "./theme/fontAssets";
 import { loadProfile, saveProfile } from "./storage/profile";
 import { analyzePhoto, warmUp, AnalyzeError, ErrorKind } from "./api/client";
 import { success, failure } from "./utils/haptics";
+import { primeReducedMotion } from "./hooks/useReducedMotion";
 import FadeIn from "./components/FadeIn";
-import SplashScreen from "./screens/SplashScreen";
+import LaunchScreen from "./screens/LaunchScreen";
 import NameEntryScreen from "./screens/NameEntryScreen";
 import HomeScreen from "./screens/HomeScreen";
 import ScanScreen from "./screens/ScanScreen";
 import AnalyzingScreen from "./screens/AnalyzingScreen";
 import ResultScreen from "./screens/ResultScreen";
 import ErrorScreen from "./screens/ErrorScreen";
-import GoodbyeScreen from "./screens/GoodbyeScreen";
+import AboutScreen from "./screens/AboutScreen";
+import SourcesScreen from "./screens/SourcesScreen";
 
-// Keeps the brand splash up long enough to read as intentional, not a flicker.
-const MIN_SPLASH_MS = 700;
+// Hold the native splash until fonts, the saved profile, and the reduce-motion
+// setting are ready. The launch screen then fades in as the splash fades out.
+NativeSplash.preventAutoHideAsync().catch(() => {});
+try {
+  NativeSplash.setOptions({ duration: 350, fade: true });
+} catch {
+  // Not supported on this platform.
+}
 
 export default function App() {
   return (
@@ -38,43 +41,37 @@ export default function App() {
 
 /**
  * Routes:
- *   boot → name (first launch only) → home → scan → analyzing → result | error
- *   home → goodbye (iOS "Exit app")
- * Five linear screens don't need a navigation library; one route object is
- * easier to reason about, and Android's back button is handled below.
+ *   boot (native splash) → launch → name (first launch only) → home → scan → analyzing → result | error
+ *   home → about → name (editing)
+ * A handful of linear screens don't need a navigation library; one route
+ * object is easier to reason about, and Android's back button is handled below.
  */
 function Root() {
   const { colors } = useTheme();
-  const [fontsLoaded, fontError] = useFonts({
-    Nunito_500Medium,
-    Nunito_600SemiBold,
-    Nunito_700Bold,
-    Nunito_800ExtraBold,
-    Baloo2_700Bold,
-    Baloo2_800ExtraBold,
-  });
+  const [fontsLoaded, fontError] = useFonts(fontAssets);
   const [profile, setProfile] = useState(undefined); // undefined = loading, null = first launch
-  const [splashElapsed, setSplashElapsed] = useState(false);
+  const [motionKnown, setMotionKnown] = useState(false);
   const [route, setRoute] = useState({ name: "boot" });
   const requestRef = useRef(null);
 
   useEffect(() => {
     warmUp(); // wake the server while the user is still on the welcome screens
     loadProfile().then(setProfile);
-    const timer = setTimeout(() => setSplashElapsed(true), MIN_SPLASH_MS);
-    return () => {
-      clearTimeout(timer);
-      requestRef.current?.abort();
-    };
+    primeReducedMotion().then(() => setMotionKnown(true));
+    return () => requestRef.current?.abort();
   }, []);
 
-  const booted = (fontsLoaded || Boolean(fontError)) && profile !== undefined && splashElapsed;
+  const ready = (fontsLoaded || Boolean(fontError)) && profile !== undefined && motionKnown;
 
   useEffect(() => {
-    if (booted && route.name === "boot") {
-      setRoute(profile ? { name: "home" } : { name: "name", editing: false });
-    }
-  }, [booted, profile, route.name]);
+    if (!ready || route.name !== "boot") return;
+    setRoute({ name: "launch" });
+    NativeSplash.hideAsync().catch(() => {});
+  }, [ready, route.name]);
+
+  const finishLaunch = useCallback(() => {
+    setRoute(profile ? { name: "home" } : { name: "name", editing: false });
+  }, [profile]);
 
   const goHome = useCallback(() => setRoute({ name: "home" }), []);
 
@@ -94,17 +91,21 @@ function Root() {
     requestRef.current?.abort();
     const controller = new AbortController();
     requestRef.current = controller;
-    setRoute({ name: "analyzing", photo, slow: false });
+    setRoute({ name: "analyzing", photo, phase: "preparing", slow: false });
+
+    // Only update the analyzing screen that belongs to this photo.
+    const patch = (changes) =>
+      setRoute((current) =>
+        current.name === "analyzing" && current.photo === photo
+          ? { ...current, ...changes }
+          : current,
+      );
 
     try {
       const result = await analyzePhoto(photo, {
         signal: controller.signal,
-        onSlow: () =>
-          setRoute((current) =>
-            current.name === "analyzing" && current.photo === photo
-              ? { ...current, slow: true }
-              : current,
-          ),
+        onPhase: (phase) => patch({ phase }),
+        onSlow: () => patch({ slow: true }),
       });
       if (controller.signal.aborted) return;
       success();
@@ -115,12 +116,6 @@ function Root() {
       failure();
       setRoute({ name: "error", photo, kind });
     }
-  }, []);
-
-  // Android can close the app outright; iOS can't, so it gets a goodbye screen.
-  const exitApp = useCallback(() => {
-    if (Platform.OS === "android") BackHandler.exitApp();
-    else setRoute({ name: "goodbye" });
   }, []);
 
   const cancelAnalysis = useCallback(() => {
@@ -142,8 +137,11 @@ function Root() {
         case "scan":
         case "result":
         case "error":
-        case "goodbye":
+        case "about":
           goHome();
+          return true;
+        case "sources":
+          setRoute(route.from ?? { name: "home" });
           return true;
         default:
           return false;
@@ -153,11 +151,11 @@ function Root() {
   }, [route, goHome, cancelAnalysis]);
 
   const firstName = profile?.firstName ?? "";
-  let screen;
+  let screen = null;
 
   switch (route.name) {
-    case "boot":
-      screen = <SplashScreen />;
+    case "launch":
+      screen = <LaunchScreen onDone={finishLaunch} />;
       break;
     case "name":
       screen = (
@@ -175,7 +173,7 @@ function Root() {
         <HomeScreen
           firstName={firstName}
           onScan={openScanner}
-          onExit={exitApp}
+          onAbout={() => setRoute({ name: "about" })}
           onEditName={() => setRoute({ name: "name", editing: true })}
         />
       );
@@ -185,7 +183,12 @@ function Root() {
       break;
     case "analyzing":
       screen = (
-        <AnalyzingScreen photo={route.photo} slow={route.slow} onCancel={cancelAnalysis} />
+        <AnalyzingScreen
+          photo={route.photo}
+          phase={route.phase}
+          slow={route.slow}
+          onCancel={cancelAnalysis}
+        />
       );
       break;
     case "result":
@@ -196,6 +199,15 @@ function Root() {
           onScanAgain={openScanner}
           onRetake={openScanner}
           onHome={goHome}
+          onSources={(sources) => setRoute({ name: "sources", sources, from: route })}
+        />
+      );
+      break;
+    case "sources":
+      screen = (
+        <SourcesScreen
+          sources={route.sources}
+          onBack={() => setRoute(route.from ?? { name: "home" })}
         />
       );
       break;
@@ -210,15 +222,21 @@ function Root() {
         />
       );
       break;
-    case "goodbye":
-      screen = <GoodbyeScreen firstName={firstName} onReturn={goHome} />;
+    case "about":
+      screen = (
+        <AboutScreen
+          firstName={firstName}
+          onBack={goHome}
+          onEditName={() => setRoute({ name: "name", editing: true })}
+        />
+      );
       break;
     default:
-      screen = null;
+      screen = null; // "boot": the native splash is still covering the app
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.background }}>
+    <View style={{ flex: 1, backgroundColor: colors.canvas }}>
       <FadeIn key={route.name}>{screen}</FadeIn>
     </View>
   );

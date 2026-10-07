@@ -1,17 +1,16 @@
-import { View, ScrollView, useWindowDimensions } from "react-native";
-import { Feather } from "@react-native-vector-icons/feather";
+import { View, ScrollView } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import ScanLine from "lucide-react-native/icons/scan-line";
+import Info from "lucide-react-native/icons/info";
 import { useTheme } from "../theme/ThemeProvider";
+import { elevation } from "../theme/tokens";
 import Screen from "../components/Screen";
 import AppText from "../components/AppText";
 import Button from "../components/Button";
-import IconButton from "../components/IconButton";
-import BananaMark from "../components/BananaMark";
-
-const STEPS = [
-  { icon: "camera", text: "Snap a clear photo of your banana" },
-  { icon: "aperture", text: "We identify its ripeness stage" },
-  { icon: "book-open", text: "Read nutrition, benefits, and who it suits" },
-];
+import Avatar from "../components/Avatar";
+import Reveal from "../components/Reveal";
+import HeroIllustration from "../components/HeroIllustration";
+import RipenessSpectrum from "../components/RipenessSpectrum";
 
 function greetingFor(hour) {
   if (hour >= 5 && hour < 12) return "Good morning";
@@ -20,126 +19,106 @@ function greetingFor(hour) {
   return "Hello";
 }
 
-export default function HomeScreen({ firstName, onScan, onExit, onEditName }) {
-  const { colors, space, radius } = useTheme();
-  const { width } = useWindowDimensions();
-  const greeting = greetingFor(new Date().getHours());
+export default function HomeScreen({ firstName, onScan, onAbout, onEditName }) {
+  const theme = useTheme();
+  const { colors, space, radius } = theme;
+  const now = new Date();
+  const greeting = greetingFor(now.getHours());
+  const dateLabel = now.toLocaleDateString(undefined, {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+  });
 
   return (
     <Screen>
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "space-between",
-          paddingHorizontal: space.lg,
-          paddingVertical: space.xs,
-        }}
-      >
-        <View style={{ flexDirection: "row", alignItems: "center", gap: space.xs }}>
-          <BananaMark size={32} framed={false} />
-          <AppText variant="headline">BananaVision</AppText>
-        </View>
-        <IconButton
-          icon="user"
-          label={firstName ? `Change your name, currently ${firstName}` : "Add your name"}
-          onPress={onEditName}
-        />
-      </View>
-
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{
-          flexGrow: 1,
-          justifyContent: "center",
-          paddingHorizontal: space.xl,
-          paddingVertical: space.lg,
-          gap: space.xl,
-        }}
-      >
-        <View style={{ gap: space.xxs }}>
-          <AppText variant="overline" tone="textSecondary">
-            {greeting}
-          </AppText>
-          <AppText variant="display" accessibilityRole="header">
-            {firstName ? (
-              <>
-                Welcome,{"\n"}
-                <AppText variant="display" tone="primary">
-                  {firstName}
-                </AppText>
-              </>
-            ) : (
-              "Welcome!"
-            )}
-          </AppText>
-        </View>
-
-        <View
-          style={{
-            backgroundColor: colors.surface,
-            borderRadius: radius.xl,
-            borderWidth: 1,
-            borderColor: colors.border,
-            padding: space.xl,
-            gap: space.xl,
-          }}
-        >
-          <View style={{ flexDirection: "row", alignItems: "center", gap: space.lg }}>
-            <BananaMark size={Math.min(width * 0.26, 112)} />
-            <AppText variant="callout" tone="textSecondary" style={{ flex: 1 }}>
-              Got a banana nearby? Scan it to see how ripe it is, how long it'll
-              last, and what it's good for.
-            </AppText>
-          </View>
-
-          <View style={{ height: 1, backgroundColor: colors.border }} />
-
-          <View style={{ gap: space.md }}>
-            {STEPS.map((step, i) => (
-              <View
-                key={step.icon}
-                accessible
-                accessibilityLabel={`Step ${i + 1}: ${step.text}`}
-                style={{ flexDirection: "row", alignItems: "center", gap: space.sm }}
-              >
-                <View
-                  style={{
-                    width: 36,
-                    height: 36,
-                    borderRadius: 18,
-                    alignItems: "center",
-                    justifyContent: "center",
-                    backgroundColor: colors.primarySoft,
-                  }}
-                >
-                  <Feather name={step.icon} size={18} color={colors.onPrimarySoft} />
-                </View>
-                <AppText variant="callout" style={{ flex: 1 }}>
-                  {step.text}
-                </AppText>
-              </View>
-            ))}
-          </View>
-        </View>
-      </ScrollView>
-
-      <View
-        style={{
           paddingHorizontal: space.xl,
           paddingTop: space.sm,
-          paddingBottom: space.md,
-          gap: space.sm,
+          paddingBottom: space.xl,
         }}
       >
-        <Button
-          label="Scan a banana"
-          icon="camera"
-          onPress={onScan}
-          accessibilityHint="Opens the camera"
-        />
-        <Button label="Exit app" icon="log-out" variant="secondary" onPress={onExit} />
-      </View>
+        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+          <AppText variant="subhead" tone="ink2">
+            {dateLabel}
+          </AppText>
+          <Avatar
+            name={firstName}
+            label={firstName ? `Profile. Change your name, currently ${firstName}` : "Add your name"}
+            onPress={onEditName}
+          />
+        </View>
+
+        <Reveal style={{ marginTop: space.lg }}>
+          <AppText variant="hero" accessibilityRole="header">
+            {greeting}
+            {firstName ? (
+              <>
+                ,{"\n"}
+                <AppText variant="hero" italic tone="accent">
+                  {firstName}
+                </AppText>
+                .
+              </>
+            ) : (
+              "."
+            )}
+          </AppText>
+        </Reveal>
+
+        <Reveal delay={90} style={{ marginTop: space.xl }}>
+          <View style={[{ borderRadius: radius.sheet }, elevation(2, theme)]}>
+            <LinearGradient
+              colors={[colors.heroFrom, colors.heroTo]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={{ borderRadius: radius.sheet, padding: space.xl, overflow: "hidden" }}
+            >
+              <HeroIllustration />
+              <AppText variant="title" style={{ marginTop: space.lg }}>
+                With a banana as a snack in hand?
+              </AppText>
+              <AppText variant="callout" tone="ink2" style={{ marginTop: space.xs }}>
+                Take a photo and we'll tell you its stage, how long it will keep, and
+                who it suits best.
+              </AppText>
+              <Button
+                label="Scan a banana"
+                icon={ScanLine}
+                iconPlacement="leading"
+                onPress={onScan}
+                accessibilityHint="Opens the camera"
+                style={{ marginTop: space.xl }}
+              />
+            </LinearGradient>
+          </View>
+        </Reveal>
+
+        <Reveal delay={180} style={{ marginTop: space.xxxl }}>
+          <AppText variant="headline">The ripening curve</AppText>
+          <AppText variant="callout" tone="ink2" style={{ marginTop: space.xxs }}>
+            Every banana travels this scale. A scan shows where yours is.
+          </AppText>
+          <View style={{ marginTop: space.lg }}>
+            <RipenessSpectrum showDays />
+          </View>
+        </Reveal>
+
+        <View style={{ alignItems: "center", marginTop: space.xxxl }}>
+          <Button
+            label="About BananaVision"
+            variant="plain"
+            tone="neutral"
+            size="medium"
+            icon={Info}
+            iconPlacement="leading"
+            onPress={onAbout}
+            accessibilityHint="What the app does, how it works, and your privacy"
+          />
+        </View>
+      </ScrollView>
     </Screen>
   );
 }

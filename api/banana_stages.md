@@ -250,9 +250,11 @@ verifiable. All sources were accessed in 2026.
 [1] U.S. Department of Agriculture, FoodData Central — "Bananas, raw" (nutrient values
 per 100 g). https://fdc.nal.usda.gov/
 
-[2] Gomez-Maqueo A. et al., "Dietary fiber, starch, and sugars in bananas at different
-stages of ripeness in the retail market," PLOS ONE (2021).
-https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0253366
+[2] Phillips KM, McGinty RC, Couture G, Pehrsson PR, McKillop K, Fukagawa NK, "Dietary
+fiber, starch, and sugars in bananas at different stages of ripeness in the retail
+market," PLOS ONE 16(7): e0253366 (2021). Fiber measured by the method that captures
+resistant starch was ~18 g/100 g in unripe fruit, 4-5 g/100 g when ripe and ~2 g/100 g
+when overripe. https://doi.org/10.1371/journal.pone.0253366
 
 [3] "In vitro examination of starch digestibility of Saba banana: impact of maturity and
 physical properties of digesta," Scientific Reports (Nature, 2020).
@@ -294,3 +296,20 @@ https://www.monashfodmap.com/blog/update-bananas-re-tested/
 [13] Allergy & Asthma Network, "Latex allergy and foods" (latex-fruit syndrome; banana
 is a high cross-reactivity food to avoid for those affected).
 https://allergyasthmanetwork.org/allergies/latex-allergy/latex-allergy-foods/
+
+[14] Gibson GR, Hutkins R, Sanders ME, et al., "Expert consensus document: The
+International Scientific Association for Probiotics and Prebiotics (ISAPP) consensus
+statement on the definition and scope of prebiotics," Nature Reviews Gastroenterology &
+Hepatology 14(8):491-502 (2017). Defines a prebiotic as "a substrate that is selectively
+utilized by host microorganisms conferring a health benefit."
+https://doi.org/10.1038/nrgastro.2017.75
+
+[15] "Short Chain Fatty Acids in the Colon and Peripheral Tissues: A Focus on Butyrate,
+Colon Cancer, Obesity and Insulin Resistance," PMC (NIH). Fermentation of resistant
+starch and other fibre in the colon produces short-chain fatty acids; butyrate is the
+main fuel of the cells lining the colon.
+https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5748798/
+
+[16] U.S. Food and Drug Administration, "Daily Value on the Nutrition and Supplement
+Facts Labels" (Daily Value for dietary fibre: 28 g).
+https://www.fda.gov/food/nutrition-facts-label/daily-value-nutrition-and-supplement-facts-labels
